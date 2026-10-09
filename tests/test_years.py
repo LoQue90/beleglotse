@@ -1,3 +1,4 @@
+from contextlib import closing
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
 import sys, unittest, tempfile, json, sqlite3
@@ -81,7 +82,7 @@ class YearTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.plan([r])
     def test_v2_template_does_not_modify_or_copy_ledger(self):
         legacy=self.root/'legacy.sqlite'
-        with sqlite3.connect(legacy) as c:
+        with closing(sqlite3.connect(legacy)) as c, c:
             c.executescript('CREATE TABLE accounts(number TEXT,description TEXT);CREATE TABLE providers(name TEXT,rule TEXT);CREATE TABLE preferences(name TEXT,value TEXT);CREATE TABLE counters(year INTEGER,last INTEGER);CREATE TABLE processed(hash TEXT);')
             c.execute('INSERT INTO accounts VALUES (?,?)',('4910','Porto'))
             c.execute('INSERT INTO providers VALUES (?,?)',('Post',json.dumps({'account':'4910','bank':'1200','aliases':[],'labels':{'amount':'Betrag'}})))
