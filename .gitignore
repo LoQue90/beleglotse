@@ -1,0 +1,24 @@
+# Lokale Umgebung und Einstellungen
+.venv/
+__pycache__/
+*.py[cod]
+lokal.json
+*.tmp
+# Persönliche Belege und Datenbanken, überall im Repository
+*.belegdb
+*.belegdb-*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.pdf
+*.tsv
+daten/
+# Erzeugte Pakete
+dist/
+*.zip
+# Editor-/Betriebssystemdateien
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
