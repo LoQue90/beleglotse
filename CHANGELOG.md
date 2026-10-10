@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.1.0
+
+- Neue Jahresdateien ohne fest vorgegebene Anbieter oder Konten; bestehende Stammdaten bleiben erhalten.
+- Anbietererkennung ausschließlich über gespeicherte Merkmale, wahlweise UND/ODER und Ausschlussbegriffe.
+- Anbieterbezogene Feldregeln erst nach eindeutiger oder manueller Auswahl; keine eingebauten Anbieter-Sonderfälle.
+- Nachvollziehbare Trefferanzeige und erneute Auswertung nach Anbieterwahl.
+- Benutzerbezogene Kontenzuordnungen aus der README entfernt.
+
 ## 3.0.0
 
 - Eigene Jahresdatei mit Stammdatenübernahme aus einem Vorjahr.

@@ -10,6 +10,7 @@ class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.root=Path(self.tmp.name)
         self.old=app.DATABASE; self.oldlocal=app.LOCAL; app.LOCAL=self.root/'local.json'; app.DATABASE=None; app.new_year({'path':str(self.root/'2026.belegdb'),'year':2026}); app.SCANS.clear(); app.PLANS.clear()
+        app.save_account({'number':'4910','description':'Testkonto'})
         self.source=self.root/'original.pdf'; self.source.write_bytes(b'%PDF-test-content')
         self.target=self.root/'archive'; self.target.mkdir()
         app.SCANS['one']={'path':self.source,'hash':app.digest(self.source)}

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-"""BelegLotse 3.0.0 - ausschließlich lokale Verarbeitung."""
+"""BelegLotse 3.1.0 - ausschließlich lokale Verarbeitung."""
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/'vendor'))
-from recognition import extract, tesseract_path, label_list
+from recognition import extract, extract_fields, tesseract_path, label_list
 import csv, io, json, re, hashlib, sqlite3, secrets, os, webbrowser, shutil
 from datetime import datetime
 from decimal import Decimal
@@ -16,8 +16,6 @@ LOCAL=ROOT/'lokal.json'
 DATABASE=None
 TOKEN=secrets.token_urlsafe(32)
 SCANS={}; PLANS={}
-ACCOUNTS={'4910':'Porto','3200':'Wareneingang','4980':'Sonstiger Betriebsbedarf','4710':'Verpackungsmaterial','4900':'Sonstige betriebliche Aufwendungen','4600':'Werbungskosten'}
-PROVIDERS={'DHL':'4910','Deutsche Post':'4910','Mouser':'3200','LCSC':'3200','JLCPCB':'3200','WISO':'4980','Verpackungskönig':'4710','FedEx':'4900','Mollie':'4900','Tiggerswelt':'4600'}
 DEFAULT={'input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
 SHARED=('monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
 
@@ -85,10 +83,7 @@ def new_year(p):
     if path.suffix.lower()!='.belegdb':raise ValueError('Die Jahresdatei muss auf .belegdb enden.')
     if not path.parent.is_dir():raise ValueError('Zielordner der Jahresdatei muss vorhanden sein.')
     if path.exists():raise ValueError('Diese Datei existiert bereits. Sie wird nicht überschrieben.')
-    accounts=list(ACCOUNTS.items());providers=[];prefs={k:DEFAULT[k] for k in SHARED};last=0
-    for name,account in PROVIDERS.items():
-        aliases=[] if name in ('DHL','Deutsche Post') else ['WISO','Buhl Data','Buhl Tax'] if name=='WISO' else [name]
-        providers.append((name,json.dumps(dict(account=account,bank='1200',aliases=aliases,labels={}),ensure_ascii=False)))
+    accounts=[];providers=[];prefs={k:DEFAULT[k] for k in SHARED};last=0
     template=str(p.get('template','')).strip()
     if template:
         source=Path(template).expanduser().resolve()
@@ -184,15 +179,18 @@ def save_account(p):
     return settings()
 
 def save_rule(p):
-    name=cell(p['name']);a=cell(p['account']);bank=cell(p.get('bank','1200'))
-    if not name or not bank.isdigit():raise ValueError('Anbietername und gültiges Geldkonto erforderlich.')
+    name=cell(p['name']);a=cell(p.get('account',''));bank=cell(p.get('bank',''))
+    if not name or (bank and not bank.isdigit()):raise ValueError('Anbietername erforderlich; Geldkonto darf nur Ziffern enthalten.')
     aliases=p.get('aliases',[])
     if isinstance(aliases,str):aliases=[x.strip() for x in aliases.splitlines() if x.strip()]
     aliases=[cell(x) for x in aliases]
+    exclude=[cell(x) for x in label_list(p.get('exclude',[]))]
+    mode=p.get('match_mode','any')
+    if mode not in ('any','all'):raise ValueError('Ungültige Verknüpfung der Erkennungsmerkmale.')
     labels={k:label_list(p.get('labels',{}).get(k,[])) for k in ('date','number','amount')}
     with db() as c:
-        if not c.execute('SELECT 1 FROM accounts WHERE number=?',(a,)).fetchone():raise ValueError('Sachkonto zuerst in der Kontenliste anlegen.')
-        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,labels=labels),ensure_ascii=False)))
+        if a and not c.execute('SELECT 1 FROM accounts WHERE number=?',(a,)).fetchone():raise ValueError('Sachkonto zuerst in der Kontenliste anlegen.')
+        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels),ensure_ascii=False)))
     return settings()
 
 def scan(folder):
@@ -205,14 +203,29 @@ def scan(folder):
             try:h=digest(file)
             except OSError:continue
             try:r=extract(file,s['rules'],s['ocr'],s['tesseract'])
-            except Exception as e:r=dict(provider='',date='',number='',amount='',currency='EUR',text='',note='PDF konnte nicht gelesen werden: '+str(e),candidates={})
-            if r['provider']=='Post':r['provider']='Deutsche Post'
+            except Exception as e:r=dict(provider='',date='',number='',amount='',currency='EUR',text='',note='PDF konnte nicht gelesen werden: '+str(e),read_notes=['PDF konnte nicht gelesen werden: '+str(e)],candidates={})
             rule=s['rules'].get(r['provider'],{})
             key=r['provider'].casefold()+'|'+r['number'].casefold() if r['number'] else None
             duplicate=bool(c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(h,key)).fetchone())
-            r.update(id=secrets.token_hex(12),filename=file.name,account=rule.get('account',''),bank=rule.get('bank','1200'),duplicate=duplicate)
-            SCANS[r['id']]={'path':file,'hash':h,'text':r.pop('text')};rows.append(r)
+            r.update(id=secrets.token_hex(12),filename=file.name,account=rule.get('account',''),bank=rule.get('bank',''),duplicate=duplicate)
+            SCANS[r['id']]={'path':file,'hash':h,'text':r.pop('text'),'read_notes':r.pop('read_notes',[])};rows.append(r)
     return sorted(rows,key=lambda r:(r['date'] or '9999',r['filename'].casefold()))
+
+def reprocess(p):
+    source=SCANS.get(p['id'])
+    if not source:raise ValueError('Bitte den Ordner erneut einlesen.')
+    if digest(source['path'])!=source['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
+    name=cell(p.get('provider',''))
+    if not name:raise ValueError('Bitte einen Anbieter auswählen.')
+    s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name)
+    result['note']=' '.join(source.get('read_notes',[])+[result['note']]).strip()
+    rule=s['rules'].get(name,{})
+    key=name.casefold()+'|'+result['number'].casefold() if result['number'] else None
+    with db() as c:
+        duplicate=bool(c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(source['hash'],key)).fetchone())
+    result.update(account=rule.get('account',''),bank=rule.get('bank',''),duplicate=duplicate,reviewed=False,year_confirmed=False)
+    PLANS.clear()
+    return result
 
 def safe(v):
     s=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',v).strip(' .')
@@ -349,6 +362,7 @@ class Handler(BaseHTTPRequestHandler):
             if n>4_000_000:raise ValueError('Anfrage zu groß.')
             p=json.loads(self.rfile.read(n))
             if self.path=='/api/scan':r=scan(p['input'])
+            elif self.path=='/api/reprocess':r=reprocess(p)
             elif self.path=='/api/plan':r=make_plan(p)
             elif self.path=='/api/execute':r=execute(p['id'])
             elif self.path=='/api/settings':r=save_settings(p)

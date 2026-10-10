@@ -98,26 +98,37 @@ def after_labels(text,labels,kind):
                 if v and v not in values:values.append(v)
     return values
 
-def extract_fields(text,rules):
-    notes=[];provider='';normalized=norm(text)
-    matched=[]
+def provider_matches(text,rules):
+    normalized=norm(text)
+    def contains(term):
+        return bool(re.search(r'(?<!\w)'+re.escape(norm(term))+r'(?!\w)',normalized))
+    results=[]
     for name,rule in rules.items():
-        # Names are not implicit keywords: rules remain explicit and editable.
-        aliases=rule.get('aliases',[])
-        if any(re.search(r'(?<!\w)'+re.escape(norm(a))+r'(?!\w)',normalized) for a in aliases if a.strip()):matched.append(name)
-    if len(matched)==1:provider=matched[0]
-    elif len(matched)>1:notes.append('Mehrere Anbieterregeln passen: '+', '.join(matched)+'. Bitte auswählen.')
-    builtin=''
-    if 'mollie b.v.' in normalized:builtin='Mollie'
-    elif 'deutsche post' in normalized:
-        builtin='DHL' if 'gesamtsumme brutto' in normalized and re.search(r'paket|päckchen',normalized) else 'Deutsche Post'
-    if not provider and not matched and builtin:provider=builtin
-    if not provider and not matched:
-        # A company line is only a proposal, never an unmarked definitive result.
-        lines=[s.strip() for s in text.splitlines() if s.strip()]
-        plausible=[s for s in lines[:35] if re.search(r'\b(?:GmbH|AG|Ltd\.?|B\.V\.|UG|KG|Inc\.?)\b',s) and len(s)<100 and not re.search(r'bank|vorstand|register',s,re.I)]
-        if len(plausible)==1:provider=plausible[0];notes.append('Aussteller nur vorgeschlagen; mit dem Beleg abgleichen und Anbieterregel speichern.')
-        else:notes.append('Aussteller bitte auswählen/eintragen und Erkennungsmerkmal speichern.')
+        aliases=label_list(rule.get('aliases',[]))
+        exclusions=label_list(rule.get('exclude',[]))
+        found=[a for a in aliases if contains(a)]
+        missing=[a for a in aliases if a not in found]
+        excluded=[a for a in exclusions if contains(a)]
+        mode=rule.get('match_mode','any')
+        matches=bool(aliases) and (not missing if mode=='all' else bool(found)) and not excluded
+        results.append(dict(name=name,mode=mode,found=found,missing=missing,excluded=excluded,matched=matches))
+    return results
+
+def extract_fields(text,rules,selected_provider=None):
+    notes=[];provider=''
+    evidence=provider_matches(text,rules)
+    matched=[r['name'] for r in evidence if r['matched']]
+    if selected_provider is not None:
+        provider=selected_provider
+        notes.append('Anbieter manuell ausgewählt: '+provider+'. Feldregeln erneut angewendet.')
+    elif len(matched)==1:
+        provider=matched[0]
+        found=next(r['found'] for r in evidence if r['name']==provider)
+        notes.append('Anbieter erkannt: '+provider+'; Treffer: '+', '.join(found)+'.')
+    elif len(matched)>1:
+        notes.append('Mehrere Anbieterregeln passen: '+', '.join(matched)+'. Bitte auswählen.')
+    else:
+        notes.append('Kein gespeicherter Anbieter passt. Bitte auswählen oder Anbieter anlegen.')
     rule=rules.get(provider,{})
     label_map=rule.get('labels',{})
     defaults={
@@ -129,13 +140,6 @@ def extract_fields(text,rules):
         custom=label_list(label_map.get(field,[]))
         labels=custom or defaults[field]
         values=after_labels(text,labels,field)
-        if not custom:
-            if builtin=='Mollie':
-                values=after_labels(text,{'date':['Rechnungsdatum'],'number':['Rechnungsreferenz'],'amount':['Insgesamt inklusive Mehrwertsteuer']}[field],field)
-            elif builtin=='Deutsche Post' and 'belegnummer:' in normalized:
-                values=after_labels(text,{'date':['Belegdatum'],'number':['Belegnummer'],'amount':['Betrag']}[field],field)
-            elif builtin=='DHL':
-                values=after_labels(text,{'date':['Rechnungsdatum'],'number':['Rechnungsnummer'],'amount':['Gesamtsumme Brutto']}[field],field)
         candidates[field]=values
     # Weak total labels are useful but must be marked for review.
     if not candidates['amount'] and not label_list(label_map.get('amount',[])):
@@ -144,19 +148,19 @@ def extract_fields(text,rules):
     result={f:vs[0] if len(vs)==1 else '' for f,vs in candidates.items()}
     for f,vs in candidates.items():
         if len(vs)>1:notes.append({'date':'Datum','number':'Rechnungsnummer','amount':'Betrag'}[f]+' mehrdeutig: '+', '.join(vs)+'. Bitte auswählen/eintragen.')
-    if builtin=='Mollie':notes.append('Mollie: Rechnungssumme, nicht offener oder verrechneter Betrag. Steuerhinweise im Beleg prüfen.')
     if not text.strip():notes.append('Kein Text erkannt. Werte bitte manuell erfassen.')
     for f in ('date','amount'):
         if not result[f]:notes.append({'date':'Rechnungsdatum','amount':'Rechnungssumme'}[f]+' fehlt oder ist unklar.')
     currency='EUR'
     foreign=re.findall(r'\b(?:USD|GBP|CHF|CAD|AUD|JPY|SEK|NOK|DKK)\b',text)
     if foreign:currency=foreign[0];notes.append('Fremdwährung erwähnt. Dieser TSV-Export unterstützt nur EUR; Betrag/Währung vor Export klären.')
-    result.update(provider=provider,currency=currency,note=' '.join(notes),candidates=candidates)
+    result.update(provider=provider,currency=currency,note=' '.join(notes),candidates=candidates,provider_matches=evidence)
     return result
 
 def extract(path,rules=None,ocr=True,tess=''):
     text,notes=pdf_text(path,ocr,tess)
     result=extract_fields(text,rules or {})
     result['note']=' '.join(notes+[result['note']]).strip()
+    result['read_notes']=notes
     result['text']=text
     return result

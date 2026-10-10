@@ -12,6 +12,7 @@ class YearTests(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         self.old,self.local=app.DATABASE,app.LOCAL;app.LOCAL=self.root/'local.json';app.DATABASE=None
         self.year=self.root/'2026.belegdb';app.new_year({'path':str(self.year),'year':2026})
+        app.save_account({'number':'4910','description':'Testkonto'})
         self.input=self.root/'Eingang';self.input.mkdir()
         self.s=app.settings()|{'input':str(self.input),'target':str(self.input/'verbucht')}
         app.save_settings(self.s)

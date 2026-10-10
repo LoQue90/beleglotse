@@ -21,6 +21,6 @@ class RecognitionTests(unittest.TestCase):
         r=extract_fields('ABC',{'A':{'aliases':['ABC']},'B':{'aliases':['ABC']}})
         self.assertEqual(r['provider'],'');self.assertIn('Mehrere Anbieter',r['note'])
     def test_saved_post_labels(self):
-        r=extract_fields('Deutsche Post AG\nBelegnummer: XYZ\nBelegdatum: 01.01.2026\nMeine Summe: 5,40',{'Deutsche Post':{'aliases':[],'labels':{'amount':'Meine Summe'}}})
+        r=extract_fields('Deutsche Post AG\nBelegnummer: XYZ\nBelegdatum: 01.01.2026\nMeine Summe: 5,40',{'Deutsche Post':{'aliases':['Deutsche Post AG'],'labels':{'amount':'Meine Summe'}}})
         self.assertEqual(r['amount'],'5,40')
 

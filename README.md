@@ -60,18 +60,9 @@ Belege werden innerhalb eines Exports nach Rechnungsdatum aufsteigend sortiert. 
 
 Unter „Konten & Anbieter“ kannst du Sachkonten mit Nummer und Beschreibung anlegen. Bestehende Kontonummern können eine geänderte Beschreibung erhalten. Die Kontenliste ist bei der Belegprüfung durchsuchbar.
 
-Die erste Einrichtung enthält:
+Neue Jahresdateien starten ohne vorgegebene Anbieter, Sachkonten oder Geldkonten. Lege deine Stammdaten selbst an oder übernimm sie beim Anlegen aus einer vorhandenen Jahresdatei. Bereits gespeicherte Daten bleiben beim Programmupdate erhalten.
 
-| Sachkonto | Beschreibung | Rechnungssteller |
-|---|---|---|
-| 4910 | Porto | DHL, Deutsche Post |
-| 3200 | Wareneingang | Mouser, LCSC, JLCPCB |
-| 4980 | Sonstiger Betriebsbedarf | WISO |
-| 4710 | Verpackungsmaterial | Verpackungskönig |
-| 4900 | Sonstige betriebliche Aufwendungen | FedEx, Mollie |
-| 4600 | Werbungskosten | Tiggerswelt |
-
-Geldkonto ist standardmäßig **1200** und pro Rechnung editierbar. Buchungstext ist der eingetragene Rechnungssteller.
+Sachkonto und Geldkonto können je Anbieter gespeichert und pro Beleg geändert werden. Ein Anbieter lässt sich auch ohne Kontozuordnung anlegen; vor dem Export müssen beide Konten ausgefüllt sein. Buchungstext ist der eingetragene Rechnungssteller.
 
 Eine Änderung des Sachkontos in der Tabelle gilt zunächst nur für den Beleg. **„Als Anbieterstandard speichern“** in der PDF-Vorschau übernimmt die Zuordnung für zukünftige Einlesevorgänge. So verändert eine Ausnahme nicht automatisch den Standard.
 
@@ -90,9 +81,22 @@ Diese Bezeichnungen sind Alternativen: Findet die App einen eindeutigen Wert, sc
 
 Der Wert muss in derselben oder direkt nachfolgenden Zeile hinter der Bezeichnung stehen. Leer lassen bedeutet allgemeine Erkennung. Eigene Feldbezeichnungen ersetzen die allgemeine Erkennung für das betreffende Feld; sie werden nicht stillschweigend mit anderen Summenbegriffen vermischt.
 
-Die **Absender-Erkennungsmerkmale** sind davon getrennt: Sie identifizieren den Rechnungssteller anhand eindeutiger Texte, etwa Firmenname oder USt-ID des Lieferanten. Mehrere Merkmale sind Alternativen. Passen mehrere Anbieter, bleibt die Zuordnung zur Prüfung offen. Verwende nicht deinen eigenen Empfängernamen als Merkmal.
+## Anbieter erkennen
 
-Regeln werden beim nächsten Einlesen angewendet. Erneutes Einlesen ersetzt ungespeicherte Zeilenkorrekturen. Es gibt keine KI, die aus jeder Korrektur automatisch eine neue Erkennungsregel erfindet.
+Zuerst wird der PDF-Text mit den gespeicherten Anbietermerkmalen verglichen. Erst wenn genau ein Anbieter passt, werden dessen Feldregeln und Kontozuordnungen angewendet. Es gibt keine fest eingebauten Anbieter- oder Layout-Sonderregeln.
+
+- **ODER:** Mindestens ein Erkennungsmerkmal muss vorkommen (auch für vorhandene Regeln aus älteren Versionen).
+- **UND:** Alle Erkennungsmerkmale müssen vorkommen.
+- **Ausschlussbegriffe:** Ein einziger gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Anbieter.
+- Ohne Erkennungsmerkmale erfolgt keine automatische Zuordnung. Der gespeicherte Anbietername allein ist kein Suchmerkmal.
+
+Gesucht wird im gesamten PDF-Text, ohne Beachtung der Groß-/Kleinschreibung; zusammenhängende Leerzeichen und Zeilenumbrüche werden vereinheitlicht. Die Adresszeile hat keine besondere Gewichtung. Verwende eindeutige Lieferantenmerkmale wie Firmenname oder USt-ID, nicht deinen eigenen Empfängernamen. Die Reihenfolge der Anbieter spielt keine Rolle. Summenbezeichnungen dienen ausschließlich der Betragserkennung.
+
+Passt kein Anbieter oder passen mehrere, bleibt die Auswahl offen. Allgemeine Feldwerte können bereits vorgeschlagen werden. Unter **„PDF / Regel“** zeigt die App je Anbieter die gefundenen Merkmale, fehlenden Merkmale und gefundenen Ausschlüsse.
+
+Nach manueller Anbieterwahl werden Datum, Rechnungsnummer, Betrag, Währung und Konten erneut vorgeschlagen. Bereits bearbeitete oder geprüfte Belege lösen vorher eine Rückfrage aus. Die Geprüft-Markierung wird aufgehoben. Neu gespeicherte Regeln lassen sich mit **„Mit gewähltem Anbieter erneut auswerten“** direkt auf den geöffneten Beleg anwenden.
+
+Erneutes Einlesen des gesamten Ordners ersetzt ungespeicherte Zeilenkorrekturen. Es gibt keine KI, die aus jeder Korrektur automatisch eine Regel erstellt.
 
 ## Dateinamen und Belegnummern einstellen
 
