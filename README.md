@@ -17,13 +17,13 @@ Das Paket ist ein Python-Startpaket, keine eigenständige EXE. Nach der Einricht
 
 Über **„Neues Jahr anlegen“** werden Buchungsjahr und Dateiname festgelegt, zum Beispiel `Belege-2026.belegdb`. Die Jahresdatei enthält:
 
-- Sachkonten und Anbieterstandards
+- Sachkonten und Rechnungsstellerstandards
 - Erkennungsregeln und gemeinsame Einstellungen
 - Nummernstand, verarbeitete Belege und Duplikatprüfung
 
 Die PDFs bleiben separat in deinen Belegordnern.
 
-Beim Anlegen von 2027 kannst du `Belege-2026.belegdb` als Vorlage auswählen. Konten, Anbieterregeln und Einstellungen werden übernommen. **Der Belegverlauf wird nicht kopiert.** Mit aktivierter Option „jährlicher Neustart“ beginnt die neue Nummerierung bei 001; andernfalls wird der letzte Nummernstand der Vorlage fortgeführt. Eine Änderung dieser Option setzt die Nummern der bereits geöffneten Datei nicht zurück.
+Beim Anlegen von 2027 kannst du `Belege-2026.belegdb` als Vorlage auswählen. Konten, Rechnungsstellerregeln und Einstellungen werden übernommen. **Der Belegverlauf wird nicht kopiert.** Mit aktivierter Option „jährlicher Neustart“ beginnt die neue Nummerierung bei 001; andernfalls wird der letzte Nummernstand der Vorlage fortgeführt. Eine Änderung dieser Option setzt die Nummern der bereits geöffneten Datei nicht zurück.
 
 **„Jahresdatei öffnen“** wechselt zwischen den Jahren. Die zuletzt verwendete Datei wird beim nächsten Programmstart wieder geöffnet. Ist sie nicht verfügbar, kannst du eine andere Datei auswählen; es wird keine leere Ersatzdatei angelegt. Die Dateiendung `.belegdb` ist eine normale SQLite-Datenbank.
 
@@ -48,7 +48,7 @@ Standardmäßig entstehen keine weiteren Unterordner. Wer möchte, kann zusätzl
 
 1. „PDFs einlesen“ anklicken.
 2. Datum, Rechnungssteller, Originalnummer, Rechnungssumme und Konten prüfen. „PDF / Regel“ zeigt den Beleg neben den Eingabefeldern.
-3. Rechnungssteller über das Dropdown wählen. Beim Öffnen stehen alle Anbieter zur Auswahl; das separate Suchfeld filtert die Liste. Neue Namen lassen sich über „Neuen Anbieter anlegen“ eingeben.
+3. Rechnungssteller über das Dropdown wählen. Beim Öffnen stehen alle Rechnungssteller zur Auswahl; das separate Suchfeld filtert die Liste. Über „Neuen Rechnungssteller anlegen“ öffnet sich ein Formular. „Speichern & auswählen“ speichert den Rechnungssteller dauerhaft in der Jahresdatei und wählt ihn aus.
 4. Jeden ausgewählten Beleg als „Geprüft“ markieren. Änderungen heben die Markierung wieder auf.
 5. „Exportvorschau erstellen“ zeigt die Reihenfolge, Belegnummern, Dateinamen und TSV-Zeilen.
 6. Vorschau bestätigen und „TSV erstellen & PDFs verschieben“ anklicken.
@@ -58,17 +58,17 @@ Belege werden innerhalb eines Exports nach Rechnungsdatum aufsteigend sortiert. 
 
 ## Sachkonten und Rechnungssteller
 
-Unter „Konten & Anbieter“ kannst du Sachkonten mit Nummer und Beschreibung anlegen. Bestehende Kontonummern können eine geänderte Beschreibung erhalten. Die Kontenliste ist bei der Belegprüfung durchsuchbar.
+Unter „Konten & Rechnungssteller“ kannst du Sachkonten mit Nummer und Beschreibung anlegen. Bestehende Kontonummern können eine geänderte Beschreibung erhalten. Die Kontenliste ist bei der Belegprüfung durchsuchbar.
 
-Neue Jahresdateien starten ohne vorgegebene Anbieter, Sachkonten oder Geldkonten. Lege deine Stammdaten selbst an oder übernimm sie beim Anlegen aus einer vorhandenen Jahresdatei. Bereits gespeicherte Daten bleiben beim Programmupdate erhalten.
+Neue Jahresdateien starten ohne vorgegebene Rechnungssteller, Sachkonten oder Geldkonten. Lege deine Stammdaten selbst an oder übernimm sie beim Anlegen aus einer vorhandenen Jahresdatei. Bereits gespeicherte Daten bleiben beim Programmupdate erhalten.
 
-Sachkonto und Geldkonto können je Anbieter gespeichert und pro Beleg geändert werden. Ein Anbieter lässt sich auch ohne Kontozuordnung anlegen; vor dem Export müssen beide Konten ausgefüllt sein. Buchungstext ist der eingetragene Rechnungssteller.
+Sachkonto und Geldkonto können je Rechnungssteller gespeichert und pro Beleg geändert werden. Ein Rechnungssteller lässt sich auch ohne Kontozuordnung anlegen; vor dem Export müssen beide Konten ausgefüllt sein. Buchungstext ist der eingetragene Rechnungssteller.
 
-Eine Änderung des Sachkontos in der Tabelle gilt zunächst nur für den Beleg. **„Als Anbieterstandard speichern“** in der PDF-Vorschau übernimmt die Zuordnung für zukünftige Einlesevorgänge. So verändert eine Ausnahme nicht automatisch den Standard.
+Eine Änderung des Sachkontos in der Tabelle gilt zunächst nur für den Beleg. **„Als Standard für diesen Rechnungssteller speichern“** in der PDF-Vorschau übernimmt die Zuordnung für zukünftige Einlesevorgänge. So verändert eine Ausnahme nicht automatisch den Standard.
 
 ## Alternative Feldbezeichnungen
 
-Jeder Anbieter kann mehrere alternative Feldbezeichnungen für Datum, Rechnungsnummer und Gesamtbetrag haben, jeweils **eine Bezeichnung pro Zeile**. Beispiel für die Rechnungssumme:
+Jeder Rechnungssteller kann mehrere alternative Feldbezeichnungen für Datum, Rechnungsnummer und Gesamtbetrag haben, jeweils **eine Bezeichnung pro Zeile**. Beispiel für die Rechnungssumme:
 
 ```text
 Gesamtsumme Brutto
@@ -81,20 +81,20 @@ Diese Bezeichnungen sind Alternativen: Findet die App einen eindeutigen Wert, sc
 
 Der Wert muss in derselben oder direkt nachfolgenden Zeile hinter der Bezeichnung stehen. Leer lassen bedeutet allgemeine Erkennung. Eigene Feldbezeichnungen ersetzen die allgemeine Erkennung für das betreffende Feld; sie werden nicht stillschweigend mit anderen Summenbegriffen vermischt.
 
-## Anbieter erkennen
+## Rechnungssteller erkennen
 
-Zuerst wird der PDF-Text mit den gespeicherten Anbietermerkmalen verglichen. Erst wenn genau ein Anbieter passt, werden dessen Feldregeln und Kontozuordnungen angewendet. Es gibt keine fest eingebauten Anbieter- oder Layout-Sonderregeln.
+Zuerst wird der PDF-Text mit den gespeicherten Rechnungsstellermerkmalen verglichen. Erst wenn genau ein Rechnungssteller passt, werden dessen Feldregeln und Kontozuordnungen angewendet. Es gibt keine fest eingebauten Rechnungssteller- oder Layout-Sonderregeln.
 
 - **ODER:** Mindestens ein Erkennungsmerkmal muss vorkommen (auch für vorhandene Regeln aus älteren Versionen).
 - **UND:** Alle Erkennungsmerkmale müssen vorkommen.
-- **Ausschlussbegriffe:** Ein einziger gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Anbieter.
-- Ohne Erkennungsmerkmale erfolgt keine automatische Zuordnung. Der gespeicherte Anbietername allein ist kein Suchmerkmal.
+- **Ausschlussbegriffe:** Ein einziger gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Rechnungssteller.
+- Ohne Erkennungsmerkmale erfolgt keine automatische Zuordnung. Beim Anlegen wird der Name als editierbarer Vorschlag in die Erkennungsmerkmale übernommen. Du kannst ihn ändern oder entfernen. Ohne Merkmale erscheint „Keine automatische Erkennung eingerichtet.“; der Rechnungssteller kann trotzdem gespeichert und manuell ausgewählt werden.
 
-Gesucht wird im gesamten PDF-Text, ohne Beachtung der Groß-/Kleinschreibung; zusammenhängende Leerzeichen und Zeilenumbrüche werden vereinheitlicht. Die Adresszeile hat keine besondere Gewichtung. Verwende eindeutige Lieferantenmerkmale wie Firmenname oder USt-ID, nicht deinen eigenen Empfängernamen. Die Reihenfolge der Anbieter spielt keine Rolle. Summenbezeichnungen dienen ausschließlich der Betragserkennung.
+Gesucht wird im gesamten PDF-Text, ohne Beachtung der Groß-/Kleinschreibung; zusammenhängende Leerzeichen und Zeilenumbrüche werden vereinheitlicht. Die Adresszeile hat keine besondere Gewichtung. Verwende eindeutige Lieferantenmerkmale wie Firmenname oder USt-ID, nicht deinen eigenen Empfängernamen. Die Reihenfolge der Rechnungssteller spielt keine Rolle. Summenbezeichnungen dienen ausschließlich der Betragserkennung.
 
-Passt kein Anbieter oder passen mehrere, bleibt die Auswahl offen. Allgemeine Feldwerte können bereits vorgeschlagen werden. Unter **„PDF / Regel“** zeigt die App je Anbieter die gefundenen Merkmale, fehlenden Merkmale und gefundenen Ausschlüsse.
+Passt kein Rechnungssteller oder passen mehrere, bleibt die Auswahl offen. Allgemeine Feldwerte können bereits vorgeschlagen werden. Unter **„PDF / Regel“** zeigt die App je Rechnungssteller die gefundenen Merkmale, fehlenden Merkmale und gefundenen Ausschlüsse.
 
-Nach manueller Anbieterwahl werden Datum, Rechnungsnummer, Betrag, Währung und Konten erneut vorgeschlagen. Bereits bearbeitete oder geprüfte Belege lösen vorher eine Rückfrage aus. Die Geprüft-Markierung wird aufgehoben. Neu gespeicherte Regeln lassen sich mit **„Mit gewähltem Anbieter erneut auswerten“** direkt auf den geöffneten Beleg anwenden.
+Nach manueller Rechnungsstellerwahl werden Datum, Rechnungsnummer, Betrag, Währung und Konten erneut vorgeschlagen. Bereits bearbeitete oder geprüfte Belege lösen vorher eine Rückfrage aus. Die Geprüft-Markierung wird aufgehoben. Neu gespeicherte Regeln lassen sich mit **„Mit gewähltem Rechnungssteller erneut auswerten“** direkt auf den geöffneten Beleg anwenden.
 
 Erneutes Einlesen des gesamten Ordners ersetzt ungespeicherte Zeilenkorrekturen. Es gibt keine KI, die aus jeder Korrektur automatisch eine Regel erstellt.
 
@@ -163,7 +163,7 @@ Bei Stromausfall oder erzwungenem Programmabbruch können bereits erzeugte Datei
 
 Die neue Version kann in einen separaten Programmordner entpackt werden. Deine bisherige Datenbank bleibt unverändert.
 
-Beim Anlegen der ersten Jahresdatei kann die bisherige `verarbeitet.sqlite` als **Stammdatenvorlage** ausgewählt werden. Konten, Anbieterregeln und vorhandene Einstellungen werden übernommen. Die alte Belegliste wird dabei **nicht übernommen**. Bereits verbuchte Rechnungen daher nicht erneut in den Eingangsordner legen. Der bisherige Verlauf bleibt in der alten Datenbank und kann weiterhin mit Version 2 eingesehen werden.
+Beim Anlegen der ersten Jahresdatei kann die bisherige `verarbeitet.sqlite` als **Stammdatenvorlage** ausgewählt werden. Konten, Rechnungsstellerregeln und vorhandene Einstellungen werden übernommen. Die alte Belegliste wird dabei **nicht übernommen**. Bereits verbuchte Rechnungen daher nicht erneut in den Eingangsordner legen. Der bisherige Verlauf bleibt in der alten Datenbank und kann weiterhin mit Version 2 eingesehen werden.
 
 Für einen normalen Programmwechsel innerhalb Version 3 bleibt die `.belegdb` unverändert erhalten. `lokal.json` im Programmordner behalten, um die zuletzt geöffnete Datei und lokalen Pfade weiterzuverwenden.
 
@@ -175,4 +175,4 @@ Der Quellcode enthält vorbereitete GitHub-Workflows für Windows-Tests und ZIP-
 
 BelegLotse steht unter der [GNU General Public License, Version 3](LICENSE) (SPDX: `GPL-3.0-only`). Copyright (c) 2026 Lorenz Uhlig. Nutzung, Änderung und Verkauf sind erlaubt. Bei Weitergabe gelten die GPL-Bedingungen, insbesondere zur Bereitstellung des entsprechenden Quellcodes und zur Lizenzierung abgeleiteter Werke. Das Programm wird ohne Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
 
-Drittanbieter-Komponenten behalten ihre eigenen Lizenzen; siehe [THIRD_PARTY.md](THIRD_PARTY.md).
+Drittrechnungssteller-Komponenten behalten ihre eigenen Lizenzen; siehe [THIRD_PARTY.md](THIRD_PARTY.md).

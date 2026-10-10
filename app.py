@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-"""BelegLotse 3.1.0 - ausschließlich lokale Verarbeitung."""
+"""BelegLotse 3.1.1 - ausschließlich lokale Verarbeitung."""
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parent
@@ -180,7 +180,7 @@ def save_account(p):
 
 def save_rule(p):
     name=cell(p['name']);a=cell(p.get('account',''));bank=cell(p.get('bank',''))
-    if not name or (bank and not bank.isdigit()):raise ValueError('Anbietername erforderlich; Geldkonto darf nur Ziffern enthalten.')
+    if not name or (bank and not bank.isdigit()):raise ValueError('Rechnungsstellername erforderlich; Geldkonto darf nur Ziffern enthalten.')
     aliases=p.get('aliases',[])
     if isinstance(aliases,str):aliases=[x.strip() for x in aliases.splitlines() if x.strip()]
     aliases=[cell(x) for x in aliases]
@@ -189,6 +189,10 @@ def save_rule(p):
     if mode not in ('any','all'):raise ValueError('Ungültige Verknüpfung der Erkennungsmerkmale.')
     labels={k:label_list(p.get('labels',{}).get(k,[])) for k in ('date','number','amount')}
     with db() as c:
+        if p.get('create_only'):
+            c.execute('BEGIN IMMEDIATE')
+            if any(existing.casefold()==name.casefold() for (existing,) in c.execute('SELECT name FROM providers')):
+                raise ValueError('Dieser Rechnungssteller existiert bereits. Bitte aus der Liste auswählen.')
         if a and not c.execute('SELECT 1 FROM accounts WHERE number=?',(a,)).fetchone():raise ValueError('Sachkonto zuerst in der Kontenliste anlegen.')
         c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels),ensure_ascii=False)))
     return settings()
@@ -216,7 +220,7 @@ def reprocess(p):
     if not source:raise ValueError('Bitte den Ordner erneut einlesen.')
     if digest(source['path'])!=source['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
     name=cell(p.get('provider',''))
-    if not name:raise ValueError('Bitte einen Anbieter auswählen.')
+    if not name:raise ValueError('Bitte einen Rechnungssteller auswählen.')
     s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name)
     result['note']=' '.join(source.get('read_notes',[])+[result['note']]).strip()
     rule=s['rules'].get(name,{})
@@ -274,7 +278,7 @@ def make_plan(payload):
             name=s['filename_pattern'].format(belegnummer=internal,rechnungsnummer=r['number'],aussteller=r['provider'],datum=r['date'],jahr=str(year)[-2:],jahr4=str(year))
             name=safe(name)
             if not name.lower().endswith('.pdf'):name+='.pdf'
-            if len(name)>180:raise ValueError('Dateiname zu lang. Anbietername kürzen.')
+            if len(name)>180:raise ValueError('Dateiname zu lang. Rechnungsstellername kürzen.')
             folder=target/date.strftime('%Y')/date.strftime('%m') if s.get('monthly',True) else target
             dest=folder/name
             if dest.exists() or str(dest).casefold() in destinations:raise ValueError('Zieldatei existiert bereits: '+str(dest))

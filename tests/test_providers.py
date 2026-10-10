@@ -72,6 +72,19 @@ class ProviderDataTests(unittest.TestCase):
         self.assertEqual(s['accounts'],[{'number':'4321','description':'Eigenes Konto'}])
         self.assertEqual(app.digest(self.year),before)
 
+    def test_create_only_persists_and_never_overwrites_existing_rule(self):
+        rule={'name':'Firma','aliases':['Firma AG'],'create_only':True}
+        app.save_rule(rule)
+        app.open_year({'path':str(self.year)})
+        before=app.settings()['rules']['Firma']
+        self.assertEqual(before['aliases'],['Firma AG'])
+        for name in ['Firma','firma','FIRMA']:
+            with self.assertRaisesRegex(ValueError,'existiert bereits'):
+                app.save_rule({'name':name,'aliases':[],'create_only':True})
+        self.assertEqual(app.settings()['rules'],{'Firma':before})
+        app.save_rule({'name':'Firma','aliases':[]})
+        self.assertEqual(app.settings()['rules']['Firma']['aliases'],[])
+
     def test_manual_reprocess_fields_accounts_duplicate_and_plan(self):
         app.save_account({'number':'4321','description':'Eigenes Konto'})
         app.save_rule({'name':'B','account':'4321','bank':'9876','aliases':['B'],

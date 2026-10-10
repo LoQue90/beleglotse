@@ -19,7 +19,7 @@ class RecognitionTests(unittest.TestCase):
         self.assertEqual((r['provider'],r['date'],r['number'],r['amount']),('Werkstatt','2026-03-01','A-9','14,99'))
     def test_alias_collision_is_not_silently_chosen(self):
         r=extract_fields('ABC',{'A':{'aliases':['ABC']},'B':{'aliases':['ABC']}})
-        self.assertEqual(r['provider'],'');self.assertIn('Mehrere Anbieter',r['note'])
+        self.assertEqual(r['provider'],'');self.assertIn('Mehrere Rechnungssteller',r['note'])
     def test_saved_post_labels(self):
         r=extract_fields('Deutsche Post AG\nBelegnummer: XYZ\nBelegdatum: 01.01.2026\nMeine Summe: 5,40',{'Deutsche Post':{'aliases':['Deutsche Post AG'],'labels':{'amount':'Meine Summe'}}})
         self.assertEqual(r['amount'],'5,40')

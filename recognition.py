@@ -120,15 +120,15 @@ def extract_fields(text,rules,selected_provider=None):
     matched=[r['name'] for r in evidence if r['matched']]
     if selected_provider is not None:
         provider=selected_provider
-        notes.append('Anbieter manuell ausgewählt: '+provider+'. Feldregeln erneut angewendet.')
+        notes.append('Rechnungssteller manuell ausgewählt: '+provider+'. Feldregeln erneut angewendet.')
     elif len(matched)==1:
         provider=matched[0]
         found=next(r['found'] for r in evidence if r['name']==provider)
-        notes.append('Anbieter erkannt: '+provider+'; Treffer: '+', '.join(found)+'.')
+        notes.append('Rechnungssteller erkannt: '+provider+'; Treffer: '+', '.join(found)+'.')
     elif len(matched)>1:
-        notes.append('Mehrere Anbieterregeln passen: '+', '.join(matched)+'. Bitte auswählen.')
+        notes.append('Mehrere Rechnungsstellerregeln passen: '+', '.join(matched)+'. Bitte auswählen.')
     else:
-        notes.append('Kein gespeicherter Anbieter passt. Bitte auswählen oder Anbieter anlegen.')
+        notes.append('Kein gespeicherter Rechnungssteller passt. Bitte auswählen oder Rechnungssteller anlegen.')
     rule=rules.get(provider,{})
     label_map=rule.get('labels',{})
     defaults={

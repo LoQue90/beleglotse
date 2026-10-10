@@ -1,5 +1,13 @@
 # Änderungen
 
+## 3.1.1
+
+- Neue Rechnungssteller direkt aus der Auswahl dauerhaft anlegen, mit eigenem Formular.
+- Namen als editierbaren Vorschlag für Erkennungsmerkmale vorbelegen.
+- Leere Merkmale beim Bearbeiten und Speichern deutlich kennzeichnen.
+- Bestehende Rechnungssteller beim Neuanlegen vor versehentlichem Überschreiben schützen.
+- Oberfläche und README verwenden einheitlich „Rechnungssteller“.
+
 ## 3.1.0
 
 - Neue Jahresdateien ohne fest vorgegebene Anbieter oder Konten; bestehende Stammdaten bleiben erhalten.
