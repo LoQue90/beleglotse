@@ -5,7 +5,7 @@ from pathlib import Path
 import argparse, hashlib, re, zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
-RUNTIME=('app.py','recognition.py','index.html','bootstrap.py','Start.cmd','requirements.txt','VERSION','README.md','THIRD_PARTY.md','LICENSE')
+RUNTIME=('app.py','recognition.py','identifiers.py','index.html','bootstrap.py','Start.cmd','requirements.txt','VERSION','README.md','THIRD_PARTY.md','LICENSE')
 SOURCE_ONLY=('.gitignore','CONTRIBUTING.md','CHANGELOG.md')
 
 def files_in(directory):

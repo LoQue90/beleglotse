@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from decimal import Decimal
 from pypdf import PdfReader
+from identifiers import find_identifiers
 from pypdf.errors import DependencyError
 
 DATE = r'\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4})\b'
@@ -98,7 +99,9 @@ def after_labels(text,labels,kind):
                 if v and v not in values:values.append(v)
     return values
 
-def provider_matches(text,rules):
+def provider_matches(text,rules,own_vat=(),own_tax=(),tax_country=""):
+    identifiers=find_identifiers(text,own_vat,own_tax,tax_country)
+    available={kind:{r["key"] for r in identifiers if r["kind"]==kind and not r["own"] and not r["recipient"] and r["country"]} for kind in ("vat","tax")}
     normalized=norm(text)
     def contains(term):
         return bool(re.search(r'(?<!\w)'+re.escape(norm(term))+r'(?!\w)',normalized))
@@ -110,21 +113,25 @@ def provider_matches(text,rules):
         missing=[a for a in aliases if a not in found]
         excluded=[a for a in exclusions if contains(a)]
         mode=rule.get('match_mode','any')
+        id_found=[v for v in rule.get('vat_ids',[]) if v in available['vat']]+[v for v in rule.get('tax_ids',[]) if v in available['tax']]
         matches=bool(aliases) and (not missing if mode=='all' else bool(found)) and not excluded
-        results.append(dict(name=name,mode=mode,found=found,missing=missing,excluded=excluded,matched=matches))
+        results.append(dict(name=name,mode=mode,found=found,missing=missing,excluded=excluded,matched=matches,id_found=id_found,id_match=bool(id_found) and not excluded))
     return results
 
-def extract_fields(text,rules,selected_provider=None):
+def extract_fields(text,rules,selected_provider=None,own_vat=(),own_tax=(),tax_country=""):
     notes=[];provider=''
-    evidence=provider_matches(text,rules)
-    matched=[r['name'] for r in evidence if r['matched']]
+    evidence=provider_matches(text,rules,own_vat,own_tax,tax_country)
+    strong=[r["name"] for r in evidence if r["id_match"]]
+    matched=strong or [r['name'] for r in evidence if r['matched']]
+    for item in evidence:
+        item['matched']=item['name'] in matched
     if selected_provider is not None:
         provider=selected_provider
         notes.append('Rechnungssteller manuell ausgewählt: '+provider+'. Feldregeln erneut angewendet.')
     elif len(matched)==1:
         provider=matched[0]
-        found=next(r['found'] for r in evidence if r['name']==provider)
-        notes.append('Rechnungssteller erkannt: '+provider+'; Treffer: '+', '.join(found)+'.')
+        found=next((r['id_found'] if strong else r['found']) for r in evidence if r['name']==provider)
+        notes.append('Rechnungssteller erkannt: '+provider+'; '+('bestätigte Kennung: ' if strong else 'Texttreffer: ')+', '.join(found)+'.')
     elif len(matched)>1:
         notes.append('Mehrere Rechnungsstellerregeln passen: '+', '.join(matched)+'. Bitte auswählen.')
     else:
@@ -154,12 +161,12 @@ def extract_fields(text,rules,selected_provider=None):
     currency='EUR'
     foreign=re.findall(r'\b(?:USD|GBP|CHF|CAD|AUD|JPY|SEK|NOK|DKK)\b',text)
     if foreign:currency=foreign[0];notes.append('Fremdwährung erwähnt. Dieser TSV-Export unterstützt nur EUR; Betrag/Währung vor Export klären.')
-    result.update(provider=provider,currency=currency,note=' '.join(notes),candidates=candidates,provider_matches=evidence)
+    result.update(provider=provider,currency=currency,note=' '.join(notes),candidates=candidates,provider_matches=evidence,identifiers=find_identifiers(text,own_vat,own_tax,tax_country))
     return result
 
-def extract(path,rules=None,ocr=True,tess=''):
+def extract(path,rules=None,ocr=True,tess='',own_vat=(),own_tax=(),tax_country=''):
     text,notes=pdf_text(path,ocr,tess)
-    result=extract_fields(text,rules or {})
+    result=extract_fields(text,rules or {},own_vat=own_vat,own_tax=own_tax,tax_country=tax_country)
     result['note']=' '.join(notes+[result['note']]).strip()
     result['read_notes']=notes
     result['text']=text

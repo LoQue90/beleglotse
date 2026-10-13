@@ -1,5 +1,14 @@
 # Änderungen
 
+## 3.2.0
+
+- Rechnungssteller aus USt-IDs und Steuernummern vorschlagen, nach Kennung gruppieren und erst nach Bestätigung speichern.
+- Räumlich zugeordnete Firmennamen, alternative Namen und Beispielbelege zur Prüfung anzeigen.
+- Bestätigte Kennungen bei der Zuordnung vor Textmerkmalen bevorzugen; Mehrfachtreffer offenlassen.
+- Eigene Unternehmenskennungen ausschließen und doppelte Zuordnung einer Kennung verhindern.
+- Rechnungssteller direkt im Regelfenster auswählen oder neu anlegen.
+- Kennungen beim Jahreswechsel übernehmen; fehlende OCR und nicht lesbare Belege im Scan melden.
+
 ## 3.1.1
 
 - Neue Rechnungssteller direkt aus der Auswahl dauerhaft anlegen, mit eigenem Formular.

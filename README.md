@@ -83,16 +83,31 @@ Der Wert muss in derselben oder direkt nachfolgenden Zeile hinter der Bezeichnun
 
 ## Rechnungssteller erkennen
 
-Zuerst wird der PDF-Text mit den gespeicherten Rechnungsstellermerkmalen verglichen. Erst wenn genau ein Rechnungssteller passt, werden dessen Feldregeln und Kontozuordnungen angewendet. Es gibt keine fest eingebauten Rechnungssteller- oder Layout-Sonderregeln.
+### Stammdaten aus Belegen vorschlagen lassen
 
-- **ODER:** Mindestens ein Erkennungsmerkmal muss vorkommen (auch für vorhandene Regeln aus älteren Versionen).
+1. Unter **Einstellungen** eigene USt-IDs und Steuernummern eintragen. Diese Kennungen werden bei der Rechnungsstellererkennung ausgeschlossen. Steuernummern brauchen ein Land, beispielsweise `DE:123/456/78901`.
+2. Eingangsordner auswählen und **„Rechnungssteller vorschlagen“** anklicken.
+3. Die App gruppiert Belege nach gefundenen Kennungen und schlägt Firmennamen vor. Soweit im PDF verfügbar, nutzt sie die räumliche Nähe zwischen Kennung und Firmenname. Beispielbelege und Textfundstellen lassen sich direkt öffnen; alternative Namen werden angezeigt.
+4. Namen und Kennung anhand des Belegs prüfen. Einen neuen Namen eintragen oder einen vorhandenen Rechnungssteller auswählen. Sachkonto und Geldkonto können gleich ergänzt werden. Bei Steuernummern das Land prüfen beziehungsweise ergänzen.
+5. Jeden gewünschten Vorschlag ausdrücklich bestätigen und speichern. **Unbestätigte Vorschläge werden nicht als Stammdaten übernommen.** USt-ID und Steuernummer desselben Unternehmens können nacheinander demselben Rechnungssteller zugeordnet werden.
+6. **„Belege mit bestätigten Stammdaten neu einlesen“** anklicken und anschließend die Buchungsangaben prüfen.
+
+Kennungen und Namen sind Vorschläge, keine amtlich geprüften Unternehmensdaten. Auf einer Rechnung können auch Kennungen des Empfängers oder einer Abrechnungsstelle stehen. Eigene sowie ausdrücklich als Empfängerangabe erkannte Kennungen werden ausgeschlossen. Belege ohne verwendbare Kennung und Lesefehler erscheinen gesondert mit Hinweisen. Für Scans ohne Text wird Tesseract benötigt.
+
+USt-IDs und Steuernummern werden getrennt gespeichert und beim Anlegen eines Folgejahres als Stammdaten übernommen. Eine Kennung kann nicht gleichzeitig zwei Rechnungsstellern zugewiesen werden. Deutsche USt-IDs werden auch ohne Feldbezeichnung gesucht; andere Länderformate benötigen eine passende USt-ID-/VAT-Bezeichnung. Die Erkennung deckt nicht jedes internationale Steuerformat ab. Bei Steuernummern ohne eindeutiges Land kann unter Einstellungen ein Standardland angegeben werden.
+
+### Reihenfolge der Zuordnung
+
+Zuerst werden gespeicherte USt-IDs und Steuernummern verglichen; Leerzeichen und übliche Trennzeichen werden vereinheitlicht. **Eindeutige Kennungstreffer haben Vorrang vor bloßen Textmerkmalen.** Passen Kennungen mehrerer Rechnungssteller, bleibt die Auswahl offen. Ohne Kennungstreffer greifen die gespeicherten Textregeln:
+
+- **ODER:** Mindestens ein Erkennungsmerkmal muss vorkommen.
 - **UND:** Alle Erkennungsmerkmale müssen vorkommen.
-- **Ausschlussbegriffe:** Ein einziger gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Rechnungssteller.
-- Ohne Erkennungsmerkmale erfolgt keine automatische Zuordnung. Beim Anlegen wird der Name als editierbarer Vorschlag in die Erkennungsmerkmale übernommen. Du kannst ihn ändern oder entfernen. Ohne Merkmale erscheint „Keine automatische Erkennung eingerichtet.“; der Rechnungssteller kann trotzdem gespeichert und manuell ausgewählt werden.
+- **Ausschlussbegriffe:** Ein gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Rechnungssteller, auch bei einer passenden Kennung.
+- Ohne Kennungen und Textmerkmale erfolgt keine automatische Zuordnung. Beim Anlegen wird der Name als editierbarer Textvorschlag vorbelegt. Ohne Merkmale erscheint „Keine automatische Erkennung eingerichtet.“
 
-Gesucht wird im gesamten PDF-Text, ohne Beachtung der Groß-/Kleinschreibung; zusammenhängende Leerzeichen und Zeilenumbrüche werden vereinheitlicht. Die Adresszeile hat keine besondere Gewichtung. Verwende eindeutige Lieferantenmerkmale wie Firmenname oder USt-ID, nicht deinen eigenen Empfängernamen. Die Reihenfolge der Rechnungssteller spielt keine Rolle. Summenbezeichnungen dienen ausschließlich der Betragserkennung.
+Textmerkmale werden im gesamten PDF-Text gesucht. Ihre Position wird bei dieser Textsuche nicht gewichtet. Die räumliche Auswertung dient den Namensvorschlägen im Einrichtungsscan. Summenbezeichnungen entscheiden nicht über den Rechnungssteller.
 
-Passt kein Rechnungssteller oder passen mehrere, bleibt die Auswahl offen. Allgemeine Feldwerte können bereits vorgeschlagen werden. Unter **„PDF / Regel“** zeigt die App je Rechnungssteller die gefundenen Merkmale, fehlenden Merkmale und gefundenen Ausschlüsse.
+Erst nach eindeutiger oder manueller Auswahl werden Feldregeln und Kontozuordnungen angewendet. Unter **„PDF / Regel“** zeigt die App passende Kennungen, Texttreffer und Ausschlüsse. Dort kannst du den Rechnungssteller direkt auswählen oder neu anlegen.
 
 Nach manueller Rechnungsstellerwahl werden Datum, Rechnungsnummer, Betrag, Währung und Konten erneut vorgeschlagen. Bereits bearbeitete oder geprüfte Belege lösen vorher eine Rückfrage aus. Die Geprüft-Markierung wird aufgehoben. Neu gespeicherte Regeln lassen sich mit **„Mit gewähltem Rechnungssteller erneut auswerten“** direkt auf den geöffneten Beleg anwenden.
 

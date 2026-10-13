@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-"""BelegLotse 3.1.1 - ausschließlich lokale Verarbeitung."""
+"""BelegLotse 3.2.0 - ausschließlich lokale Verarbeitung."""
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/'vendor'))
 from recognition import extract, extract_fields, tesseract_path, label_list
+from identifiers import entries as id_entries, find_identifiers, layout_candidates, company_names, tax as normalize_tax
 import csv, io, json, re, hashlib, sqlite3, secrets, os, webbrowser, shutil
 from datetime import datetime
 from decimal import Decimal
@@ -15,9 +16,9 @@ from urllib.parse import urlparse, parse_qs
 LOCAL=ROOT/'lokal.json'
 DATABASE=None
 TOKEN=secrets.token_urlsafe(32)
-SCANS={}; PLANS={}
-DEFAULT={'input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
-SHARED=('monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
+SCANS={}; PLANS={}; DISCOVERIES={}
+DEFAULT={'own_vat':[],'own_tax':[],'tax_country':'','input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
+SHARED=('own_vat','own_tax','tax_country','monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
 
 def load_json(path,default):return json.loads(path.read_text('utf-8')) if path.exists() else default.copy()
 def write_json(path,value):
@@ -71,7 +72,7 @@ def open_year(p):
         write_json(LOCAL,local)
     except Exception:
         DATABASE=old;raise
-    SCANS.clear();PLANS.clear()
+    SCANS.clear();PLANS.clear();DISCOVERIES.clear()
     return settings()
 
 def new_year(p):
@@ -164,6 +165,9 @@ def save_settings(s):
     if not current['year_file']:raise ValueError('Zuerst Jahresdatei öffnen.')
     if s.get('number_source','internal') not in ('internal','original'):raise ValueError('Ungültige Nummernwahl.')
     validate_naming(s)
+    s=s.copy();s['own_vat']=id_entries(s.get('own_vat',[]),'vat');s['own_tax']=id_entries(s.get('own_tax',[]),'tax')
+    s['tax_country']=str(s.get('tax_country','')).strip().upper()
+    if s['tax_country'] and not re.fullmatch('[A-Z]{2}',s['tax_country']):raise ValueError('Land als zweistelligen Code eingeben.')
     local=load_json(LOCAL,{})
     local.setdefault('paths',{})[current['file_id']]={k:str(s.get(k,'')) for k in ('input','target')}
     local['tesseract']=str(s.get('tesseract',''))
@@ -193,20 +197,29 @@ def save_rule(p):
             c.execute('BEGIN IMMEDIATE')
             if any(existing.casefold()==name.casefold() for (existing,) in c.execute('SELECT name FROM providers')):
                 raise ValueError('Dieser Rechnungssteller existiert bereits. Bitte aus der Liste auswählen.')
+        existing=c.execute('SELECT rule FROM providers WHERE name=?',(name,)).fetchone()
+        old=json.loads(existing[0]) if existing else {}
+        vat_ids=id_entries(p.get('vat_ids',old.get('vat_ids',[])),'vat')
+        tax_ids=id_entries(p.get('tax_ids',old.get('tax_ids',[])),'tax')
+        own=settings()
+        if set(vat_ids)&set(own['own_vat']) or set(tax_ids)&set(own['own_tax']):raise ValueError('Eigene Unternehmenskennung darf keinem Rechnungssteller zugeordnet werden.')
+        for other,raw in c.execute('SELECT name,rule FROM providers WHERE name!=?',(name,)):
+            other_rule=json.loads(raw)
+            if set(vat_ids)&set(other_rule.get('vat_ids',[])) or set(tax_ids)&set(other_rule.get('tax_ids',[])):raise ValueError('Kennung ist bereits einem anderen Rechnungssteller zugeordnet: '+other)
         if a and not c.execute('SELECT 1 FROM accounts WHERE number=?',(a,)).fetchone():raise ValueError('Sachkonto zuerst in der Kontenliste anlegen.')
-        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels),ensure_ascii=False)))
+        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels,vat_ids=vat_ids,tax_ids=tax_ids),ensure_ascii=False)))
     return settings()
 
 def scan(folder):
     path=Path(folder).expanduser().resolve()
     if not path.is_dir():raise ValueError('Eingangsordner existiert nicht.')
-    SCANS.clear();PLANS.clear();s=settings();rows=[]
+    SCANS.clear();PLANS.clear();DISCOVERIES.clear();s=settings();rows=[]
     with db() as c:
         for file in sorted(path.iterdir()):
             if file.suffix.lower()!='.pdf' or not file.is_file():continue
             try:h=digest(file)
             except OSError:continue
-            try:r=extract(file,s['rules'],s['ocr'],s['tesseract'])
+            try:r=extract(file,s['rules'],s['ocr'],s['tesseract'],s['own_vat'],s['own_tax'],s['tax_country'])
             except Exception as e:r=dict(provider='',date='',number='',amount='',currency='EUR',text='',note='PDF konnte nicht gelesen werden: '+str(e),read_notes=['PDF konnte nicht gelesen werden: '+str(e)],candidates={})
             rule=s['rules'].get(r['provider'],{})
             key=r['provider'].casefold()+'|'+r['number'].casefold() if r['number'] else None
@@ -221,7 +234,7 @@ def reprocess(p):
     if digest(source['path'])!=source['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
     name=cell(p.get('provider',''))
     if not name:raise ValueError('Bitte einen Rechnungssteller auswählen.')
-    s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name)
+    s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name,own_vat=s['own_vat'],own_tax=s['own_tax'],tax_country=s['tax_country'])
     result['note']=' '.join(source.get('read_notes',[])+[result['note']]).strip()
     rule=s['rules'].get(name,{})
     key=name.casefold()+'|'+result['number'].casefold() if result['number'] else None
@@ -229,6 +242,51 @@ def reprocess(p):
         duplicate=bool(c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(source['hash'],key)).fetchone())
     result.update(account=rule.get('account',''),bank=rule.get('bank',''),duplicate=duplicate,reviewed=False,year_confirmed=False)
     PLANS.clear()
+    return result
+
+def discover(folder):
+    rows=scan(folder);s=settings();groups={};unresolved=[]
+    for row in rows:
+        source=SCANS[row['id']];text=source['text']
+        ids=find_identifiers(text,s['own_vat'],s['own_tax'],s['tax_country'])
+        usable=[i for i in ids if not i['own'] and not i['recipient']]
+        if not usable:
+            unresolved.append(dict(filename=row['filename'],id=row['id'],note=row['note'],reason='Keine verwendbare Kennung gefunden; eigene und ausdrücklich als Empfänger gekennzeichnete Kennungen werden ausgeschlossen.'))
+            continue
+        try:geometry=layout_candidates(source['path'],usable)
+        except Exception:geometry={}
+        for ident in usable:
+            key=(ident['kind'],ident['key']);geo=geometry.get(key,{})
+            names=geo.get('names') or company_names(text)
+            owners=[n for n,rule in s['rules'].items() if ident['key'] in rule.get('vat_ids' if ident['kind']=='vat' else 'tax_ids',[])]
+            if key not in groups:
+                groups[key]=dict(id=secrets.token_hex(12),kind=ident['kind'],value=ident['value'],country=ident['country'],name=owners[0] if len(owners)==1 else (names[0] if names else ''),names=[],files=[],contexts=[],existing=owners,reason=geo.get('reason','Textvorschlag; keine sichere räumliche Zuordnung.'),confirmed=False)
+            group=groups[key]
+            for name in names:
+                if name not in group['names']:group['names'].append(name)
+            group['files'].append(dict(id=row['id'],filename=row['filename'],page=geo.get('page')))
+            group['contexts'].append(ident['context'])
+    for group in groups.values():
+        group['conflict']=len(group['names'])>1 or len(group['existing'])>1
+        DISCOVERIES[group['id']]=dict(group,year=str(DATABASE.resolve()))
+    return dict(groups=list(groups.values()),unresolved=unresolved,count=len(rows))
+
+def confirm_discovery(p):
+    group=DISCOVERIES.get(p['id'])
+    if not group or group['year']!=str(DATABASE.resolve()):raise ValueError('Vorschlag abgelaufen. Bitte neu scannen.')
+    if not p.get('confirmed'):raise ValueError('Kennung und Rechnungssteller bitte ausdrücklich bestätigen.')
+    name=cell(p.get('name',''))
+    if not name:raise ValueError('Name des Rechnungsstellers fehlt.')
+    s=settings();rule=s['rules'].get(name,{}).copy()
+    field='vat_ids' if group['kind']=='vat' else 'tax_ids'
+    value=group['value'] if group['kind']=='vat' else normalize_tax(str(p.get('country',group['country']))+':'+group['value'])
+    values=list(rule.get(field,[]))
+    if value not in values:values.append(value)
+    rule.update(name=name,**{field:values})
+    if 'account' in p:rule['account']=p['account']
+    if 'bank' in p:rule['bank']=p['bank']
+    result=save_rule(rule)
+    group['confirmed']=True
     return result
 
 def safe(v):
@@ -366,6 +424,8 @@ class Handler(BaseHTTPRequestHandler):
             if n>4_000_000:raise ValueError('Anfrage zu groß.')
             p=json.loads(self.rfile.read(n))
             if self.path=='/api/scan':r=scan(p['input'])
+            elif self.path=='/api/discover':r=discover(p['input'])
+            elif self.path=='/api/discover/confirm':r=confirm_discovery(p)
             elif self.path=='/api/reprocess':r=reprocess(p)
             elif self.path=='/api/plan':r=make_plan(p)
             elif self.path=='/api/execute':r=execute(p['id'])
