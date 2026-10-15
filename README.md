@@ -6,16 +6,17 @@ Eingangsrechnungen lokal aus PDFs erfassen, prüfen, als WISO-TSV exportieren un
 
 ## Start unter Windows
 
-1. Das **Windows-ZIP** vollständig in einen beschreibbaren Ordner entpacken.
-2. Python 3.10 oder neuer installieren, falls noch nicht vorhanden. Im Setup „Add python.exe to PATH“ aktivieren.
-3. `Start.cmd` doppelklicken. Beim ersten Start werden benötigte Bibliotheken über das Internet eingerichtet.
-4. Der Standardbrowser öffnet die App. Das Konsolenfenster während der Arbeit geöffnet lassen; zum Beenden schließen oder Strg+C drücken.
+1. **Windows-EXE.zip** vollständig in einen beschreibbaren Ordner entpacken.
+2. `BelegLotse.exe` doppelklicken. Python und PDF-Bibliotheken sind enthalten.
+3. Die App öffnet sich im Standardbrowser. Das Konsolenfenster geöffnet lassen; zum Beenden Strg+C drücken.
 
-Das Paket ist ein Python-Startpaket, keine eigenständige EXE. Nach der Einrichtung ist für die Belegverarbeitung kein Internet nötig. Es wird kein Cloud-KI-Dienst verwendet.
+Den gesamten Ordner einschließlich `_internal` zusammenlassen. Mehrfachstarts derselben Installation öffnen die laufende App. Die Jahresdatenbank bleibt separat. Beim Update einen neuen Ordner verwenden und die bestehende Jahresdatei in der App öffnen. Optional `lokal.json` aus dem alten Ordner übernehmen, um Startpräferenzen zu behalten.
 
-## Version 3.3.0
+Das bisherige Windows-ZIP mit `Start.cmd` bleibt als Alternative verfügbar und benötigt Python 3.10+ sowie beim ersten Start Internet zur Einrichtung. OCR benötigt weiterhin eine separate Tesseract-Installation. Die lokale Belegverarbeitung verwendet keinen Cloud-KI-Dienst.
 
-App vor dem Update schließen. Das Windows-Paket vollständig in einen eigenen Ordner entpacken und mit `Start.cmd` starten. Tests und Entwicklungsdateien sind im separaten Source-Paket enthalten. Eine Jahresdatei kann neu angelegt oder geöffnet werden; eine Datenbankmigration ist für diese Version nicht nötig.
+## Version 3.3.1
+
+Eigenständiger EXE-Start und korrigierte Rechnungsstellervorschläge: Maßeinheiten wie „€/kg“ werden nicht mehr mit der Rechtsform „KG“ verwechselt. Bestehende Jahresdateien können weiterverwendet werden.
 
 Unter **„PDF / Regel“** zeigt die App für Rechnungsnummer, Datum und Rechnungssumme die gefundenen Werte mit ihren Beschriftungen. Eine Fundstelle anklicken: **Blau** markiert die Beschriftung, **Gelb** den Wert. Die Vorschau wechselt zur passenden Seite. Mit **„Wert übernehmen“** lässt sich ein Vorschlag in die Prüfliste übernehmen; die Geprüft-Markierung wird dabei aufgehoben. Das Original-PDF bleibt separat zugänglich.
 

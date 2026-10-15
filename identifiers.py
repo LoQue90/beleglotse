@@ -72,7 +72,12 @@ def company_names(text):
         if not 3<=len(line)<=100 or not COMPANY.search(line):continue
         if re.search(r'(?:Datenschutz|übermittel|Abrechnung sind|Fragen|IBAN|Vorstand|Registergericht)',line,re.I):continue
         # Limit to the legal name, excluding following street addresses.
-        match=COMPANY.search(line);name=line[:match.end()].strip(' ,*')
+        match=COMPANY.search(line)
+        prefix=line[:match.start()].strip()
+        # A legal suffix requires a name, not a unit in a table heading.
+        if not re.search(r'[^\W\d_]',prefix):continue
+        if match.group().casefold()=='kg' and (match.group()!='KG' or re.search(r'[/€(]\s*$',prefix)):continue
+        name=line[:match.end()].strip(' ,*')
         if name and name not in result:result.append(name)
     return result[:12]
 

@@ -5,3 +5,7 @@
 Beim ersten Start installiert `bootstrap.py` die Bibliotheken aus `requirements.txt` in eine lokale Python-Umgebung: cryptography, pypdfium2 und Pillow. Deren Paketmetadaten und Lizenztexte sind Teil der jeweiligen Installation. Tesseract wird separat installiert und ist nicht im Download enthalten.
 
 Die persönlichen Jahresdateien und Rechnungen sind keine Programmkomponenten und werden nicht in Release-Pakete aufgenommen.
+
+## Windows EXE
+
+Das EXE-Paket wird mit PyInstaller gebaut (GPL mit Bootloader-Ausnahme) und enthält die Python-Laufzeit sowie die oben genannten Laufzeitbibliotheken. PyInstaller: https://pyinstaller.org/ — Python: https://www.python.org/psf/license/

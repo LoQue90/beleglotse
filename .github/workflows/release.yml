@@ -37,6 +37,10 @@ jobs:
           "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Build verified release packages
         run: python scripts/build_release.py --tag "$env:RELEASE_TAG"
+      - name: Install EXE build tools
+        run: python -m pip install pyinstaller==6.20.0
+      - name: Build and test Windows EXE
+        run: python scripts/build_exe.py
       - name: Create release and upload files
         env:
           GH_TOKEN: ${{ github.token }}

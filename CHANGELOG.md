@@ -1,3 +1,9 @@
+# 3.3.1
+
+- Windows-EXE mit eingebettetem Python, Browserstart und Mehrfachstartschutz.
+- Maßeinheiten werden nicht mehr als Rechnungsstellernamen vorgeschlagen.
+- Windows-Build prüft den Start der fertigen EXE vor Veröffentlichung.
+
 # Änderungen
 
 ## 3.3.0

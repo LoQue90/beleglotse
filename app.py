@@ -20,7 +20,8 @@ STARTUP_CANCEL=Event()
 from functools import wraps
 from urllib.parse import urlparse, parse_qs
 
-LOCAL=ROOT/'lokal.json'
+DATA_ROOT=Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else ROOT
+LOCAL=DATA_ROOT/'lokal.json'
 DATABASE=None
 TOKEN=secrets.token_urlsafe(32)
 SCANS={}; PLANS={}; DISCOVERIES={}
@@ -139,7 +140,7 @@ def settings():
     local=load_json(LOCAL,{})
     s=DEFAULT.copy()
     s.update(year_file=str(DATABASE) if DATABASE else '',bookyear=None,accounts=[],rules={},counters={},recent_files=local.get('recent_files',[]),tesseract=local.get('tesseract',''))
-    s['legacy_template']=str(Path(local.get('data_dir',str(ROOT/'daten')))/'verarbeitet.sqlite')
+    s['legacy_template']=str(Path(local.get('data_dir',str(DATA_ROOT/'daten')))/'verarbeitet.sqlite')
     if DATABASE and DATABASE.is_file():
         with db() as c:
             for key in SHARED+('bookyear','file_id'):
@@ -667,7 +668,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(r)
         except Exception as e:self.respond({'error':str(e)},400)
 
-if __name__=='__main__':
+def main(on_ready=None):
     STARTUP['loading']=True
     def restore_year():
         global DATABASE
@@ -690,8 +691,14 @@ if __name__=='__main__':
     print('BelegLotse '+(ROOT/'VERSION').read_text().strip()+': '+url+'\nNur auf einem Rechner gleichzeitig verwenden. Zum Beenden Strg+C drücken.')
     print(f'Lokaler Dienst bereit: {time.perf_counter()-STARTED:.2f} s',flush=True)
     def open_browser():
-        if server.ready.wait(5):webbrowser.open(url)
+        if server.ready.wait(5):
+            if on_ready:on_ready(url)
+            if '--no-browser' not in sys.argv:webbrowser.open(url)
     Thread(target=open_browser,daemon=True).start()
     try:server.serve_forever(poll_interval=0.1)
     except KeyboardInterrupt:pass
     finally:server.server_close()
+
+
+if __name__=='__main__':
+    main()

@@ -6,7 +6,7 @@ import argparse, hashlib, re, zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 RUNTIME=('accounts_ekr03.json','app.py','recognition.py','document_model.py','field_engine.py','party_engine.py','identifiers.py','index.html','bootstrap.py','Start.cmd','requirements.txt','VERSION','README.md','THIRD_PARTY.md','LICENSE')
-SOURCE_ONLY=('.gitignore','CONTRIBUTING.md','CHANGELOG.md','KORREKTUREN.md')
+SOURCE_ONLY=('launcher.py','.gitignore','CONTRIBUTING.md','CHANGELOG.md','KORREKTUREN.md')
 
 def files_in(directory):
     return [p for p in sorted((ROOT/directory).rglob('*')) if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc']

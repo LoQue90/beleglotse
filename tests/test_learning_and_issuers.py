@@ -21,6 +21,12 @@ class IssuerAndPaymentTests(unittest.TestCase):
                 self.assertEqual([i['key'] for i in ids],['NL123456789B01'])
         self.assertEqual(find_identifiers('VAT: ungültig - Register 12345678'),[])
 
+    def test_units_are_not_company_names(self):
+        for label in ['(€/kg)', '(kg)', 'Menge (kg)', 'Preis €/KG', 'KG']:
+            self.assertEqual(company_names(label), [])
+        for name in ['Muster KG', 'Muster GmbH', 'Der Grüne Punkt - Duales System Deutschland GmbH']:
+            self.assertEqual(company_names(name), [name])
+
     def test_column_boundaries_and_split_identifiers(self):
         for token in ['DE123456789','DE 123456789']:
             d=document((30,30,'Abrechnungsstelle:'),(250,30,'USt-ID'),(30,45,'Fremde AG'),(250,45,token),(30,60,'VAT DE987654321'))
