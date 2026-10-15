@@ -1,24 +1,31 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-"""BelegLotse 3.2.0 - ausschließlich lokale Verarbeitung."""
+"""BelegLotse 3.3.0-test4 - ausschließlich lokale Verarbeitung."""
 from pathlib import Path
-import sys
+import sys, time
+STARTED=time.perf_counter()
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/'vendor'))
 from recognition import extract, extract_fields, tesseract_path, label_list
-from identifiers import entries as id_entries, find_identifiers, layout_candidates, company_names, tax as normalize_tax
+from identifiers import entries as id_entries, layout_candidates, company_names, tax as normalize_tax
+from field_engine import assignment_signature, same_assignment
+from party_engine import analyze as analyze_parties
 import csv, io, json, re, hashlib, sqlite3, secrets, os, webbrowser, shutil
+STARTUP={"loading":False,"error":""}
 from datetime import datetime
 from decimal import Decimal
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from threading import RLock, Event, Thread
+STARTUP_CANCEL=Event()
+from functools import wraps
 from urllib.parse import urlparse, parse_qs
 
 LOCAL=ROOT/'lokal.json'
 DATABASE=None
 TOKEN=secrets.token_urlsafe(32)
 SCANS={}; PLANS={}; DISCOVERIES={}
-DEFAULT={'own_vat':[],'own_tax':[],'tax_country':'','input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
-SHARED=('own_vat','own_tax','tax_country','monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
+DEFAULT={'tax_rates':['Keine Vorsteuer','Umsatzsteuer § 13b UStG 19 % o. VSt EU-Untern.'],'disabled_accounts':[],'own_vat':[],'own_tax':[],'tax_country':'','input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
+SHARED=('tax_rates','disabled_accounts','own_vat','own_tax','tax_country','monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
 
 def load_json(path,default):return json.loads(path.read_text('utf-8')) if path.exists() else default.copy()
 def write_json(path,value):
@@ -84,7 +91,7 @@ def new_year(p):
     if path.suffix.lower()!='.belegdb':raise ValueError('Die Jahresdatei muss auf .belegdb enden.')
     if not path.parent.is_dir():raise ValueError('Zielordner der Jahresdatei muss vorhanden sein.')
     if path.exists():raise ValueError('Diese Datei existiert bereits. Sie wird nicht überschrieben.')
-    accounts=[];providers=[];prefs={k:DEFAULT[k] for k in SHARED};last=0
+    accounts=json.loads((ROOT/'accounts_ekr03.json').read_text('utf-8'));providers=[];prefs={k:DEFAULT[k] for k in SHARED};last=0
     template=str(p.get('template','')).strip()
     if template:
         source=Path(template).expanduser().resolve()
@@ -172,15 +179,52 @@ def save_settings(s):
     local.setdefault('paths',{})[current['file_id']]={k:str(s.get(k,'')) for k in ('input','target')}
     local['tesseract']=str(s.get('tesseract',''))
     with db() as c:
-        for key in SHARED:c.execute('INSERT OR REPLACE INTO preferences VALUES (?,?)',(key,json.dumps(s.get(key,DEFAULT[key]))))
+        for key in SHARED:c.execute('INSERT OR REPLACE INTO preferences VALUES (?,?)',(key,json.dumps(s.get(key,current.get(key,DEFAULT[key])))))
     write_json(LOCAL,local)
     return settings()
 
 def save_account(p):
     number=cell(p['number']);description=cell(p['description'])
     if not number.isdigit() or not description:raise ValueError('Kontonummer und Beschreibung ausfüllen.')
-    with db() as c:c.execute('INSERT OR REPLACE INTO accounts VALUES (?,?)',(number,description))
+    with db() as c:
+        c.execute('INSERT OR REPLACE INTO accounts VALUES (?,?)',(number,description))
+        disabled=preference(c,'disabled_accounts',[])
+        disabled=[n for n in disabled if n!=number]
+        if p.get('disabled'):disabled.append(number)
+        c.execute('INSERT OR REPLACE INTO preferences VALUES (?,?)',('disabled_accounts',json.dumps(disabled)))
     return settings()
+
+def import_accounts(p):
+    text=str(p.get('text','')).lstrip('\ufeff')
+    if not text.strip():raise ValueError('Keine Konten gefunden.')
+    delimiter='\t' if '\t' in text.splitlines()[0] else ';' if ';' in text.splitlines()[0] else ','
+    values=[]
+    for index,row in enumerate(csv.reader(io.StringIO(text),delimiter=delimiter)):
+        if not row or not any(x.strip() for x in row):continue
+        if index==0 and row[0].strip().lower() in ('nummer','kontonummer','nr.','number'):continue
+        if len(row)!=2 or not row[0].strip().isdigit() or not row[1].strip():raise ValueError('Import: zwei Spalten Kontonummer und Bezeichnung erforderlich (Zeile '+str(index+1)+').')
+        values.append((cell(row[0]),cell(row[1])))
+    if not values:raise ValueError('Keine Konten gefunden.')
+    with db() as c:c.executemany('INSERT OR REPLACE INTO accounts VALUES (?,?)',values)
+    return settings()
+
+def save_tax_rate(p):
+    old=cell(p.get('old',''));new=cell(p.get('name',''))
+    if not new:raise ValueError('Steuersatzbezeichnung fehlt.')
+    with db() as c:
+        rates=preference(c,'tax_rates',DEFAULT['tax_rates'])
+        if old and old not in rates:raise ValueError('Steuersatz nicht mehr vorhanden.')
+        if new!=old and new in rates:raise ValueError('Dieser Steuersatz existiert bereits.')
+        rates=[new if x==old else x for x in rates] if old else rates+[new]
+        c.execute('INSERT OR REPLACE INTO preferences VALUES (?,?)',('tax_rates',json.dumps(rates)))
+        if old:
+            for name,raw in c.execute('SELECT name,rule FROM providers').fetchall():
+                rule=json.loads(raw)
+                if rule.get('tax_rate',DEFAULT['tax_rates'][0])==old:
+                    rule['tax_rate']=new;c.execute('UPDATE providers SET rule=? WHERE name=?',(json.dumps(rule,ensure_ascii=False),name))
+    PLANS.clear()
+    return settings()
+
 
 def save_rule(p):
     name=cell(p['name']);a=cell(p.get('account',''));bank=cell(p.get('bank',''))
@@ -202,12 +246,11 @@ def save_rule(p):
         vat_ids=id_entries(p.get('vat_ids',old.get('vat_ids',[])),'vat')
         tax_ids=id_entries(p.get('tax_ids',old.get('tax_ids',[])),'tax')
         own=settings()
+        tax_rate=cell(p.get('tax_rate',old.get('tax_rate',own['tax_rates'][0])))
+        if tax_rate not in own['tax_rates']:raise ValueError('Steuersatz zuerst in der Steuersatzliste anlegen.')
         if set(vat_ids)&set(own['own_vat']) or set(tax_ids)&set(own['own_tax']):raise ValueError('Eigene Unternehmenskennung darf keinem Rechnungssteller zugeordnet werden.')
-        for other,raw in c.execute('SELECT name,rule FROM providers WHERE name!=?',(name,)):
-            other_rule=json.loads(raw)
-            if set(vat_ids)&set(other_rule.get('vat_ids',[])) or set(tax_ids)&set(other_rule.get('tax_ids',[])):raise ValueError('Kennung ist bereits einem anderen Rechnungssteller zugeordnet: '+other)
         if a and not c.execute('SELECT 1 FROM accounts WHERE number=?',(a,)).fetchone():raise ValueError('Sachkonto zuerst in der Kontenliste anlegen.')
-        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels,vat_ids=vat_ids,tax_ids=tax_ids),ensure_ascii=False)))
+        c.execute('INSERT OR REPLACE INTO providers VALUES (?,?)',(name,json.dumps(dict(account=a,bank=bank,tax_rate=tax_rate,aliases=aliases,exclude=exclude,match_mode=mode,labels=labels,vat_ids=vat_ids,tax_ids=tax_ids,collective=bool(p.get('collective',old.get('collective',False))),field_memory=old.get('field_memory',{})),ensure_ascii=False)))
     return settings()
 
 def scan(folder):
@@ -219,13 +262,14 @@ def scan(folder):
             if file.suffix.lower()!='.pdf' or not file.is_file():continue
             try:h=digest(file)
             except OSError:continue
-            try:r=extract(file,s['rules'],s['ocr'],s['tesseract'],s['own_vat'],s['own_tax'],s['tax_country'])
+            try:r=extract(file,s['rules'],s['ocr'],s['tesseract'],s['own_vat'],s['own_tax'],s['tax_country'],fingerprint=h)
             except Exception as e:r=dict(provider='',date='',number='',amount='',currency='EUR',text='',note='PDF konnte nicht gelesen werden: '+str(e),read_notes=['PDF konnte nicht gelesen werden: '+str(e)],candidates={})
+            r['pages']=(r.get('document') or {}).get('pages',[])
             rule=s['rules'].get(r['provider'],{})
             key=r['provider'].casefold()+'|'+r['number'].casefold() if r['number'] else None
             duplicate=bool(c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(h,key)).fetchone())
-            r.update(id=secrets.token_hex(12),filename=file.name,account=rule.get('account',''),bank=rule.get('bank',''),duplicate=duplicate)
-            SCANS[r['id']]={'path':file,'hash':h,'text':r.pop('text'),'read_notes':r.pop('read_notes',[])};rows.append(r)
+            r.update(id=secrets.token_hex(12),filename=file.name,account=rule.get('account',''),bank=rule.get('bank',''),tax_rate=rule.get('tax_rate',s['tax_rates'][0]),duplicate=duplicate)
+            SCANS[r['id']]={'path':file,'hash':h,'text':r.pop('text'),'document':r.pop('document',None),'layout_lines':r.pop('layout_lines',[]),'read_notes':r.pop('read_notes',[])};rows.append(r)
     return sorted(rows,key=lambda r:(r['date'] or '9999',r['filename'].casefold()))
 
 def reprocess(p):
@@ -234,23 +278,116 @@ def reprocess(p):
     if digest(source['path'])!=source['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
     name=cell(p.get('provider',''))
     if not name:raise ValueError('Bitte einen Rechnungssteller auswählen.')
-    s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name,own_vat=s['own_vat'],own_tax=s['own_tax'],tax_country=s['tax_country'])
+    s=settings();result=extract_fields(source['text'],s['rules'],selected_provider=name,own_vat=s['own_vat'],own_tax=s['own_tax'],tax_country=s['tax_country'],layout_lines=source.get('layout_lines',()),document=source.get('document'))
     result['note']=' '.join(source.get('read_notes',[])+[result['note']]).strip()
     rule=s['rules'].get(name,{})
     key=name.casefold()+'|'+result['number'].casefold() if result['number'] else None
     with db() as c:
         duplicate=bool(c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(source['hash'],key)).fetchone())
-    result.update(account=rule.get('account',''),bank=rule.get('bank',''),duplicate=duplicate,reviewed=False,year_confirmed=False)
+    result.update(account=rule.get('account',''),bank=rule.get('bank',''),tax_rate=rule.get('tax_rate',s['tax_rates'][0]),duplicate=duplicate,reviewed=False,year_confirmed=False)
     PLANS.clear()
     return result
+
+def checked_source(p):
+    source=SCANS.get(p['id'])
+    if not source:raise ValueError('Bitte den Ordner erneut einlesen.')
+    if digest(source['path'])!=source['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
+    return source
+
+
+def remember_field(p):
+    source=checked_source(p);name=cell(p.get('provider',''));field=p.get('field')
+    if field not in ('date','number','amount'):raise ValueError('Ungültiges Feld.')
+    s=settings()
+    if name not in s['rules']:raise ValueError('Rechnungssteller zuerst speichern.')
+    rule=s['rules'][name];memory=rule.setdefault('field_memory',{})
+    if p.get('forget'):
+        memory.pop(field,None)
+    else:
+        r=reprocess(p);hits=r['field_evidence'][field];index=p.get('index')
+        if not isinstance(index,int) or index<0 or index>=len(hits):raise ValueError('Fundstelle nicht mehr vorhanden.')
+        hit=hits[index];signature=assignment_signature(source.get('document'),hit)
+        if not signature:raise ValueError('Nur positionierte PDF-Fundstellen können gemerkt werden; OCR bitte einzeln prüfen.')
+        if len({h['value'] for h in hits})!=1 or not hit['selected']:raise ValueError('Widersprüchliche Fundstellen zuerst prüfen. Diese Zuordnung wird nicht automatisch gelernt.')
+        entries=memory.setdefault(field,[])
+        if not any(same_assignment(e,signature) for e in entries):entries.append(signature)
+    with db() as c:c.execute('UPDATE providers SET rule=? WHERE name=?',(json.dumps(rule,ensure_ascii=False),name))
+    PLANS.clear()
+    return dict(settings=settings(),result=reprocess(p))
+
+
+def provider_suggestions(p):
+    source=checked_source(p);s=settings();document=source.get('document')
+    data=analyze_parties(source['text'],document,s['own_vat'],s['own_tax'],s['tax_country'])
+    usable=[i for i in data['identifiers'] if i['issuer_usable']]
+    try:geometry=layout_candidates(source['path'],usable)
+    except Exception:geometry={}
+    candidates={}
+    def add(name,page=None,box=None,context='',reason='Firmenname aus dem Beleg; bitte prüfen.'):
+        if not name:return None
+        if name not in candidates:candidates[name]=dict(name=name,aliases=[name],vat_ids=[],tax_ids=[],page=page,box=box,context=context,reason=reason)
+        return candidates[name]
+    for party in data['parties']:
+        if party['role']=='seller' and party['name']:add(party['name'],party['page'],party['name_box'],party['label'], 'Ausdrücklich beschrifteter Verkäuferbereich; bitte prüfen.')
+    for ident in usable:
+        geo=geometry.get((ident['kind'],ident['key']),{});names=geo.get('names',[])
+        for rank,name in enumerate(names):
+            candidate=add(name,geo.get('page'),None,ident['context'],geo.get('reason','Bitte Zuordnung prüfen.'))
+            if candidate and rank==0 and ident['country']:
+                candidate['vat_ids' if ident['kind']=='vat' else 'tax_ids'].append(ident['key'])
+    if document:
+        for row in document['rows']:
+            # Keep separate footer columns separate for company-name proposals too.
+            chunks=[];chunk=[]
+            for word in row['words']:
+                if chunk and word['box'][0]-chunk[-1]['box'][2]>max(18,(word['box'][3]-word['box'][1])*2):chunks.append(chunk);chunk=[]
+                chunk.append(word)
+            if chunk:chunks.append(chunk)
+            for chunk in chunks:
+                text=' '.join(w['text'] for w in chunk)
+                for name in company_names(text):
+                    blocked=any(role['page']==row['page'] and role['role'] not in ('seller',) and 0<=row['box'][1]-role['box'][1]<90 and role['box'][0]-12<=chunk[0]['box'][0]<role['end_x'] and chunk[0]['box'][0]-role['box'][0]<230 for role in data['parties'])
+                    if not blocked:add(name,row['page'],[chunk[0]['box'][0],row['box'][1],chunk[-1]['box'][2],row['box'][3]],text)
+    elif not candidates:
+        for name in company_names(source['text']):add(name)
+    return dict(candidates=list(candidates.values()),identifiers=data['identifiers'])
+
+
+def page_text(p):
+    source=checked_source(p);doc=source.get('document') or {};page=int(p.get('page',1))
+    return dict(rows=[row for row in doc.get('rows',[]) if row['page']==page])
+
 
 def discover(folder):
     rows=scan(folder);s=settings();groups={};unresolved=[]
     for row in rows:
         source=SCANS[row['id']];text=source['text']
-        ids=find_identifiers(text,s['own_vat'],s['own_tax'],s['tax_country'])
-        usable=[i for i in ids if not i['own'] and not i['recipient']]
+        ids=row.get('identifiers',[])
+        usable=[i for i in ids if i.get('issuer_usable') and not i['own'] and not i['recipient']]
+        sellers=list(dict.fromkeys(p['name'] for p in row.get('parties',[]) if p['role']=='seller' and p['name']))
+        selected=s['rules'].get(row.get('provider'),{})
+        if selected.get('collective'):
+            confirmed=set(selected.get('vat_ids',[])+selected.get('tax_ids',[]))
+            usable=[i for i in ids if i['key'] in confirmed and not i['own'] and not i['recipient'] and (i['issuer_usable'] or 'platform' in i['roles'])]
+            if usable:sellers=[]
+        if sellers:
+            for seller in sellers:
+                key=('name',seller.casefold())
+                if key not in groups:
+                    owners=[n for n,r in s['rules'].items() if seller in r.get('aliases',[]) or n==seller]
+                    groups[key]=dict(id=secrets.token_hex(12),kind='name',value=seller,country='',name=owners[0] if len(owners)==1 else seller,names=[seller],files=[],contexts=[],existing=owners,reason='Aus ausdrücklich beschriftetem Verkäuferbereich. Plattformkennungen werden nicht diesem Namen zugeordnet.',confirmed=False)
+                groups[key]['files'].append(dict(id=row['id'],filename=row['filename'],page=1))
+                groups[key]['contexts'].append('Verkäufer: '+seller)
+            continue
         if not usable:
+            proposals=provider_suggestions({'id':row['id']})['candidates']
+            for proposal in proposals:
+                name=proposal['name'];key=('name',name.casefold())
+                if key not in groups:
+                    groups[key]=dict(id=secrets.token_hex(12),kind='name',value=name,country='',name=name,names=[name],files=[],contexts=[],existing=[],reason='Firmenname ohne eindeutig zugeordnete Kennung; bitte prüfen.',confirmed=False)
+                groups[key]['files'].append(dict(id=row['id'],filename=row['filename'],page=proposal.get('page')))
+                groups[key]['contexts'].append(proposal.get('context',name))
+            if proposals:continue
             unresolved.append(dict(filename=row['filename'],id=row['id'],note=row['note'],reason='Keine verwendbare Kennung gefunden; eigene und ausdrücklich als Empfänger gekennzeichnete Kennungen werden ausgeschlossen.'))
             continue
         try:geometry=layout_candidates(source['path'],usable)
@@ -262,14 +399,27 @@ def discover(folder):
             if key not in groups:
                 groups[key]=dict(id=secrets.token_hex(12),kind=ident['kind'],value=ident['value'],country=ident['country'],name=owners[0] if len(owners)==1 else (names[0] if names else ''),names=[],files=[],contexts=[],existing=owners,reason=geo.get('reason','Textvorschlag; keine sichere räumliche Zuordnung.'),confirmed=False)
             group=groups[key]
+            if names and names[0] not in group.setdefault('preferred_names',[]):group['preferred_names'].append(names[0])
             for name in names:
                 if name not in group['names']:group['names'].append(name)
             group['files'].append(dict(id=row['id'],filename=row['filename'],page=geo.get('page')))
             group['contexts'].append(ident['context'])
+    bundles=[]
     for group in groups.values():
-        group['conflict']=len(group['names'])>1 or len(group['existing'])>1
-        DISCOVERIES[group['id']]=dict(group,year=str(DATABASE.resolve()))
-    return dict(groups=list(groups.values()),unresolved=unresolved,count=len(rows))
+        group['conflict']=len(group.get('preferred_names',group['names']))>1 or len(group['existing'])>1
+        group['identifiers']=[] if group['kind']=='name' else [dict(kind=group['kind'],value=group['value'],country=group['country'])]
+        target=None
+        if group['name'] and not group['conflict']:
+            for candidate in bundles:
+                if not candidate['conflict'] and candidate['name'].casefold()==group['name'].casefold() and (set(f['id'] for f in candidate['files']) & set(f['id'] for f in group['files']) or candidate['existing']==group['existing'] and len(group['existing'])==1):
+                    target=candidate;break
+        if target:
+            target['identifiers'].extend(group['identifiers'])
+            for file,context in zip(group['files'],group['contexts']):
+                target['files'].append(file);target['contexts'].append(context)
+        else:bundles.append(group)
+    for group in bundles:DISCOVERIES[group['id']]=dict(group,year=str(DATABASE.resolve()))
+    return dict(groups=bundles,unresolved=unresolved,count=len(rows))
 
 def confirm_discovery(p):
     group=DISCOVERIES.get(p['id'])
@@ -278,11 +428,15 @@ def confirm_discovery(p):
     name=cell(p.get('name',''))
     if not name:raise ValueError('Name des Rechnungsstellers fehlt.')
     s=settings();rule=s['rules'].get(name,{}).copy()
-    field='vat_ids' if group['kind']=='vat' else 'tax_ids'
-    value=group['value'] if group['kind']=='vat' else normalize_tax(str(p.get('country',group['country']))+':'+group['value'])
-    values=list(rule.get(field,[]))
-    if value not in values:values.append(value)
-    rule.update(name=name,**{field:values})
+    if group['kind']=='name':
+        rule['aliases']=list(dict.fromkeys(rule.get('aliases',[])+[group['value']]))
+    countries=p.get('countries',{})
+    for index,ident in enumerate(group.get('identifiers',[])):
+        field='vat_ids' if ident['kind']=='vat' else 'tax_ids'
+        value=ident['value'] if ident['kind']=='vat' else normalize_tax(str(countries.get(str(index),p.get('country',ident['country'])))+':'+ident['value'])
+        rule[field]=list(dict.fromkeys(rule.get(field,[])+[value]))
+    rule['name']=name
+    if 'tax_rate' in p:rule['tax_rate']=p['tax_rate']
     if 'account' in p:rule['account']=p['account']
     if 'bank' in p:rule['bank']=p['bank']
     result=save_rule(rule)
@@ -310,6 +464,8 @@ def make_plan(payload):
             source=SCANS.get(row['id'])
             if not source:raise ValueError('Bitte den Ordner erneut einlesen.')
             r={k:cell(row.get(k,'')) for k in ('provider','date','number','amount','account','bank')}
+            r['tax_rate']=cell(row.get('tax_rate',s['tax_rates'][0]))
+            if r['tax_rate'] not in s['tax_rates']:raise ValueError('Bitte einen gültigen Steuersatz wählen.')
             if any(not r[k] for k in ('provider','date','amount','account','bank')):raise ValueError('Aussteller, Datum, Betrag und beide Konten müssen ausgefüllt sein.')
             if row.get('currency','EUR')!='EUR':raise ValueError('Nur EUR-Export möglich. Fremdwährungsbelege nicht ungeprüft übernehmen.')
             if not row.get('reviewed',False):raise ValueError('Jede ausgewählte Rechnung bitte als geprüft markieren.')
@@ -331,7 +487,7 @@ def make_plan(payload):
             digits=int(s['year_digits']);yearpart='' if digits==0 else str(year)[-digits:]
             internal=cell(s['prefix'])+yearpart+str(counters[year]).zfill(int(s['sequence_digits']))
             tsv_number=internal if s.get('number_source','internal')=='internal' else r['number']
-            if not tsv_number:raise ValueError('Für den Export mit Originalnummer muss die Rechnungsnummer ausgefüllt sein.')
+            if amount!=0 and not tsv_number:raise ValueError('Für den Export mit Originalnummer muss die Rechnungsnummer ausgefüllt sein.')
             if '{rechnungsnummer}' in s['filename_pattern'] and not r['number']:raise ValueError('Das Dateinamensschema benötigt eine Original-Rechnungsnummer.')
             name=s['filename_pattern'].format(belegnummer=internal,rechnungsnummer=r['number'],aussteller=r['provider'],datum=r['date'],jahr=str(year)[-2:],jahr4=str(year))
             name=safe(name)
@@ -341,13 +497,13 @@ def make_plan(payload):
             dest=folder/name
             if dest.exists() or str(dest).casefold() in destinations:raise ValueError('Zieldatei existiert bereits: '+str(dest))
             destinations.add(str(dest).casefold())
-            lines.append(['Ausgabe',date.strftime('%d.%m.%Y'),tsv_number,r['provider'],f'{amount:.2f}'.replace('.',',')+' €','NULL',r['account'],r['bank']])
-            r.update(internal=internal,year=year,sequence=counters[year],currency='EUR')
+            if amount!=0:lines.append(['Ausgabe',date.strftime('%d.%m.%Y'),tsv_number,r['provider'],f'{amount:.2f}'.replace('.',',')+' €',r['account'],r['tax_rate'],r['bank']])
+            r.update(internal=internal,year=year,sequence=counters[year],currency='EUR',archive_only=amount==0)
             items.append(dict(source=str(source['path']),destination=str(dest),hash=h,key=key,metadata=r))
     stream=io.StringIO(newline='');csv.writer(stream,delimiter='\t',lineterminator='\r\n').writerows(lines)
     plan_id=secrets.token_hex(16)
     export=target/('WISO_Ausgaben_'+datetime.now().strftime('%Y-%m-%d_%H%M%S')+'_'+plan_id[:6]+'.tsv')
-    plan=dict(items=items,tsv=stream.getvalue(),export=str(export),settings=s,counters=counters,base=base,data=str(DATABASE.resolve()))
+    plan=dict(items=items,tsv=stream.getvalue(),export=str(export) if lines else '',settings=s,counters=counters,base=base,data=str(DATABASE.resolve()))
     PLANS.clear();PLANS[plan_id]=plan
     return {k:plan[k] for k in ('items','tsv','export')}|{'id':plan_id}
 
@@ -366,11 +522,12 @@ def execute(plan_id):
             with dest.open('xb') as out:
                 created.append(dest);out.write(Path(i['source']).read_bytes());out.flush();os.fsync(out.fileno())
             if digest(dest)!=i['hash']:raise ValueError('Kopierprüfung fehlgeschlagen.')
-        export=Path(plan['export']);export.parent.mkdir(parents=True,exist_ok=True)
-        with export.open('xb') as out:
-            created.append(export);out.write(plan['tsv'].encode('utf-8'));out.flush();os.fsync(out.fileno())
+        if plan['export']:
+            export=Path(plan['export']);export.parent.mkdir(parents=True,exist_ok=True)
+            with export.open('xb') as out:
+                created.append(export);out.write(plan['tsv'].encode('utf-8'));out.flush();os.fsync(out.fileno())
         for i in plan['items']:
-            c.execute('INSERT INTO processed (hash,invoice_key,destination,export,source,created,metadata) VALUES (?,?,?,?,?,?,?)',(i['hash'],i['key'],i['destination'],str(export),i['source'],datetime.now().isoformat(),json.dumps(i['metadata'],ensure_ascii=False)))
+            c.execute('INSERT INTO processed (hash,invoice_key,destination,export,source,created,metadata) VALUES (?,?,?,?,?,?,?)',(i['hash'],i['key'],i['destination'],'' if i['metadata']['archive_only'] else plan['export'],i['source'],datetime.now().isoformat(),json.dumps(i['metadata'],ensure_ascii=False)))
         for year,number in plan['counters'].items():c.execute('INSERT OR REPLACE INTO counters VALUES (?,?)',(year,number))
         c.commit()
     except Exception:
@@ -387,24 +544,69 @@ def execute(plan_id):
         except Exception as e:warnings.append(i['source']+': Original blieb erhalten ('+str(e)+').')
     try:save_settings(plan['settings'])
     except Exception as e:warnings.append('Einstellungen nicht gespeichert: '+str(e))
-    return dict(export=plan['export'],count=len(plan['items']),warnings=warnings)
+    return dict(export=plan['export'],count=len(plan['items']),exported=sum(not i['metadata']['archive_only'] for i in plan['items']),archived_only=sum(i['metadata']['archive_only'] for i in plan['items']),warnings=warnings)
 
 def history():
     with db() as c:
         return [dict(id=h,**(json.loads(m) if m else {'provider':'Altimport 1.x','internal':'','date':''}),destination=d,export=e,created=t) for h,m,d,e,t in c.execute('SELECT hash,metadata,destination,export,created FROM processed ORDER BY created DESC')]
 
+STATE_LOCK=RLock()
+
+def serialized(method):
+    @wraps(method)
+    def call(self,*args,**kwargs):
+        # Static UI requests stay responsive while state changes are serialized.
+        if method.__name__=='do_GET' and urlparse(self.path).path=='/':
+            return method(self,*args,**kwargs)
+        with STATE_LOCK:return method(self,*args,**kwargs)
+    return call
+
+class LocalServer(ThreadingHTTPServer):
+    daemon_threads=True
+    def __init__(self,*args,**kwargs):
+        self.ready=Event()
+        super().__init__(*args,**kwargs)
+    def service_actions(self):
+        self.ready.set()
+
 class Handler(BaseHTTPRequestHandler):
+    timeout=15
     def log_message(self,*args):pass
     def respond(self,obj,status=200,kind='application/json; charset=utf-8'):
         data=obj if isinstance(obj,bytes) else json.dumps(obj,ensure_ascii=False).encode('utf-8')
         self.send_response(status);self.send_header('Content-Type',kind);self.send_header('Content-Length',str(len(data)));self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff');self.end_headers();self.wfile.write(data)
     def trusted(self):return self.headers.get('Host')==f'127.0.0.1:{self.server.server_port}'
+    @serialized
     def do_GET(self):
         if not self.trusted():return self.respond({'error':'Host abgelehnt'},403)
         try:
             parsed=urlparse(self.path)
             if parsed.path=='/':return self.respond((ROOT/'index.html').read_bytes(),kind='text/html; charset=utf-8')
-            if parsed.path=='/api/init':return self.respond(dict(token=TOKEN,settings=settings()))
+            if parsed.path=='/api/init':return self.respond(dict(token=TOKEN,settings=settings(),startup=STARTUP,theme=load_json(LOCAL,{}).get('theme','dark')))
+            if parsed.path=='/api/page':
+                q=parse_qs(parsed.query)
+                if q.get('token',[''])[0]!=TOKEN:return self.respond({},403)
+                item=SCANS.get(q.get('id',[''])[0])
+                if not item:raise ValueError('Beleg nicht mehr in der Prüfliste.')
+                if digest(item['path'])!=item['hash']:raise ValueError('Quelldatei verändert. Bitte erneut einlesen.')
+                page_no=int(q.get('page',['1'])[0])
+                cache=item.setdefault('previews',{})
+                if page_no not in cache:
+                    import pypdfium2 as pdfium
+                    with pdfium.PdfDocument(str(item['path']),password='') as pdf:
+                        if not 1<=page_no<=len(pdf):raise ValueError('Seite nicht vorhanden.')
+                        page=pdf[page_no-1]
+                        try:
+                            bitmap=page.render(scale=min(2,1600/max(page.get_size())))
+                            try:
+                                image=bitmap.to_pil()
+                                try:
+                                    out=io.BytesIO();image.save(out,format='PNG');cache[page_no]=out.getvalue()
+                                finally:image.close()
+                            finally:bitmap.close()
+                        finally:page.close()
+                    while len(cache)>3:cache.pop(next(iter(cache)))
+                return self.respond(cache[page_no],kind='image/png')
             if parsed.path=='/api/pdf':
                 q=parse_qs(parsed.query)
                 if q.get('token',[''])[0]!=TOKEN:return self.respond({},403)
@@ -417,20 +619,34 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('PDF unter dem gespeicherten Pfad nicht vorhanden. Auf anderen Rechnern kann der Ablagepfad abweichen.')
             return self.respond({},404)
         except Exception as e:return self.respond({'error':str(e)},400)
+    @serialized
     def do_POST(self):
         if not self.trusted() or self.headers.get('X-Token')!=TOKEN or self.headers.get('Origin') not in (None,f'http://127.0.0.1:{self.server.server_port}'):return self.respond({},403)
         try:
+            if self.path=='/api/startup/skip':
+                STARTUP_CANCEL.set();STARTUP['loading']=False
+                return self.respond({'ok':True})
+            if STARTUP['loading']:raise ValueError('Letzte Jahresdatei wird noch geöffnet. Bitte kurz warten.')
             n=int(self.headers.get('Content-Length','0'))
             if n>4_000_000:raise ValueError('Anfrage zu groß.')
             p=json.loads(self.rfile.read(n))
-            if self.path=='/api/scan':r=scan(p['input'])
+            if self.path=='/api/theme':
+                mode=p.get('mode')
+                if mode not in ('system','light','dark'):raise ValueError('Ungültige Darstellung.')
+                local=load_json(LOCAL,{});local['theme']=mode;write_json(LOCAL,local);r={'theme':mode}
+            elif self.path=='/api/scan':r=scan(p['input'])
             elif self.path=='/api/discover':r=discover(p['input'])
             elif self.path=='/api/discover/confirm':r=confirm_discovery(p)
             elif self.path=='/api/reprocess':r=reprocess(p)
+            elif self.path=='/api/field/remember':r=remember_field(p)
+            elif self.path=='/api/provider/suggest':r=provider_suggestions(p)
+            elif self.path=='/api/page/text':r=page_text(p)
             elif self.path=='/api/plan':r=make_plan(p)
             elif self.path=='/api/execute':r=execute(p['id'])
             elif self.path=='/api/settings':r=save_settings(p)
             elif self.path=='/api/account':r=save_account(p)
+            elif self.path=='/api/accounts/import':r=import_accounts(p)
+            elif self.path=='/api/tax-rate':r=save_tax_rate(p)
             elif self.path=='/api/rule':r=save_rule(p)
             elif self.path=='/api/year/open':r=open_year(p)
             elif self.path=='/api/year/new':r=new_year(p)
@@ -452,15 +668,30 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:self.respond({'error':str(e)},400)
 
 if __name__=='__main__':
-    config=load_json(LOCAL,{})
-    if config.get('year_file'):
+    STARTUP['loading']=True
+    def restore_year():
+        global DATABASE
+        started=time.perf_counter()
         try:
-            check_year_file(Path(config['year_file']));DATABASE=Path(config['year_file'])
-        except Exception as e:print('Letzte Jahresdatei konnte nicht geöffnet werden: '+str(e))
-    server=HTTPServer(('127.0.0.1',0),Handler)
+            config=load_json(LOCAL,{})
+            if config.get('year_file'):
+                path=Path(config['year_file'])
+                check_year_file(path)
+                with STATE_LOCK:
+                    if not STARTUP_CANCEL.is_set():DATABASE=path
+        except Exception as e:
+            if not STARTUP_CANCEL.is_set():STARTUP['error']='Letzte Jahresdatei konnte nicht geöffnet werden: '+str(e)
+        finally:
+            STARTUP['loading']=False
+            print(f'Jahresdatei geprüft: {time.perf_counter()-started:.2f} s',flush=True)
+    Thread(target=restore_year,daemon=True).start()
+    server=LocalServer(('127.0.0.1',0),Handler)
     url=f'http://127.0.0.1:{server.server_port}'
     print('BelegLotse '+(ROOT/'VERSION').read_text().strip()+': '+url+'\nNur auf einem Rechner gleichzeitig verwenden. Zum Beenden Strg+C drücken.')
-    webbrowser.open(url)
-    try:server.serve_forever()
+    print(f'Lokaler Dienst bereit: {time.perf_counter()-STARTED:.2f} s',flush=True)
+    def open_browser():
+        if server.ready.wait(5):webbrowser.open(url)
+    Thread(target=open_browser,daemon=True).start()
+    try:server.serve_forever(poll_interval=0.1)
     except KeyboardInterrupt:pass
     finally:server.server_close()

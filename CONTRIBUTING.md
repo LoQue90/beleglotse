@@ -44,3 +44,16 @@ Der Workflow ist vorbereitet, wird aber erst im tatsächlichen GitHub-Repository
 ## Lizenz der Beiträge
 
 Beiträge zum eigenen BelegLotse-Code werden unter GPL-3.0-only eingereicht. Drittanbieter-Code muss gesondert gekennzeichnet und lizenzrechtlich kompatibel sein.
+
+
+## Erkennung erweitern
+
+Der Erkennungskern arbeitet unabhängig von Browser und Datenbank:
+
+- `document_model.py`: Wörter, Zeilen, Seiten und Positionen in PDF-Punkten, Ursprung links oben. PDF-Text und OCR liefern dasselbe Modell.
+- `field_engine.py`: allgemeine Feldbegriffe (`LEXICON`), räumliche Beziehungen, Werteformate und nachvollziehbare Bewertung. Neue Begriffe bekommen eine semantische Rolle; keine Firmen, Kennungen, Dateinamen oder festen Vorlagenkoordinaten einbauen.
+- `party_engine.py`: ausdrücklich beschriftete Beteiligtenrollen und Verwendbarkeit von Kennungen. Unbeschriftete Rollen bleiben begrenzt erkennbar; im Zweifel keine automatische Zuordnung erzwingen.
+- `recognition.py`: Einlesen/OCR, begrenzter Rohdaten-Cache und Zusammensetzen der Ergebnisse. Änderungen an Regeln werten die Rohdaten erneut aus.
+- `app.py` und `index.html`: Speicherung, HTTP-Schnittstelle, Prüfung und Export. Fundstellen bestehen aus Wert, Beschriftung, Seite, Rechteck, Herkunft, Begründung und Auswahlstatus.
+
+Neue Strukturen mit synthetischen Tests unter `tests/` absichern. Konflikte und falsch positive Treffer ebenso prüfen wie erfolgreiche Erkennung. Persönliche Beispiel-PDFs, Buchungswerte und private Prüfmanifeste gehören weder ins Repository noch in Release-Pakete. Ein erfolgreicher bekannter Prüfbestand belegt keine allgemeine Erkennungsquote.

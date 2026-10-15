@@ -1,0 +1,1366 @@
+[
+  [
+    "15",
+    "Konzessionen"
+  ],
+  [
+    "20",
+    "Gewerbliche Schutzrechte"
+  ],
+  [
+    "25",
+    "Ähnliche Rechte und Werte"
+  ],
+  [
+    "27",
+    "EDV - Software"
+  ],
+  [
+    "30",
+    "Lizenzen an gewerblichen Schutzrechten und ähnlichen Rechten und Werten"
+  ],
+  [
+    "35",
+    "Geschäfts- oder Firmenwert"
+  ],
+  [
+    "38",
+    "Anzahlungen auf Geschäfts- oder Firmenwert"
+  ],
+  [
+    "39",
+    "Anzahlungen auf immaterielle Vermögensgegenstände"
+  ],
+  [
+    "59",
+    "Grundstücksanteil des häuslichen Arbeitszimmers"
+  ],
+  [
+    "65",
+    "Unbebaute Grundstücke"
+  ],
+  [
+    "70",
+    "Grundstücksgleiche Rechte (Erbbaurecht, Dauerwohnrecht)"
+  ],
+  [
+    "79",
+    "Anzahlungen auf Grund und Boden"
+  ],
+  [
+    "90",
+    "Geschäftsbauten auf eigenen Grundstücken"
+  ],
+  [
+    "129",
+    "Anzahlungen auf Geschäfts-, Fabrik- und andere Bauten auf eigenen Grundstücken"
+  ],
+  [
+    "149",
+    "Gebäudeteil des häuslichen Arbeitszimmers"
+  ],
+  [
+    "159",
+    "Anzahlungen auf Wohnbauten auf eigenen Grundstücken"
+  ],
+  [
+    "189",
+    "Anzahlungen auf Geschäfts-, Fabrik- und andere Bauten auf fremden Grundstücken"
+  ],
+  [
+    "199",
+    "Anzahlungen auf Wohnbauten auf fremden Grundstücken"
+  ],
+  [
+    "200",
+    "Technische Anlagen und Maschinen"
+  ],
+  [
+    "299",
+    "Anzahlungen auf technische Anlagen und Maschinen"
+  ],
+  [
+    "300",
+    "Andere Anlagen, Betriebs- und Geschäftsausstattung"
+  ],
+  [
+    "320",
+    "Pkw"
+  ],
+  [
+    "350",
+    "Lkw"
+  ],
+  [
+    "380",
+    "Sonstige Transportmittel"
+  ],
+  [
+    "410",
+    "Geschäftsausstattung"
+  ],
+  [
+    "420",
+    "Büroeinrichtung"
+  ],
+  [
+    "430",
+    "Ladeneinrichtung"
+  ],
+  [
+    "440",
+    "Werkzeuge"
+  ],
+  [
+    "450",
+    "Einbauten"
+  ],
+  [
+    "470",
+    "Computeranlagen"
+  ],
+  [
+    "480",
+    "Geringwertige Wirtschaftsgüter bis 800 €"
+  ],
+  [
+    "485",
+    "Wirtschaftsgüter 250,01 € bis 1000 € (Sammelposten)"
+  ],
+  [
+    "486",
+    "Nachträgliche Anschaffungs-/Herstellungskosten zu Wirtschaftsgütern 150,01 € bis 1000 € (Sammelposten - selbst gesch.)"
+  ],
+  [
+    "487",
+    "Wirtschaftsgüter 250,01 € bis 1000 € (Sammelposten - selbst gesch.)"
+  ],
+  [
+    "488",
+    "Nachträgliche Anschaffungs-/Herstellungskosten zu Wirtschaftsgütern 250,01 € bis 1000 € (Sammelposten - selbst gesch.)"
+  ],
+  [
+    "490",
+    "Sonstige Betriebs- und Geschäftsausstattung"
+  ],
+  [
+    "499",
+    "Anzahlungen auf andere Anlagen, Betriebs- und Geschäftsausstattung"
+  ],
+  [
+    "500",
+    "Anteile an verbundenen Unternehmen (Anlagevermögen)"
+  ],
+  [
+    "510",
+    "Beteiligungen"
+  ],
+  [
+    "525",
+    "Wertpapiere des Anlagevermögens"
+  ],
+  [
+    "535",
+    "Festverzinsliche Wertpapiere"
+  ],
+  [
+    "538",
+    "Anteile einer GmbH & Co. KG an einer Komplementär-GmbH (selbst gesch.)"
+  ],
+  [
+    "540",
+    "Übrige sonstige Ausleihungen"
+  ],
+  [
+    "550",
+    "Darlehen (Forderung)"
+  ],
+  [
+    "570",
+    "Genossenschaftsanteile zum langfristigen Verbleib"
+  ],
+  [
+    "1000",
+    "Kasse - Bar"
+  ],
+  [
+    "1100",
+    "Bank (Postbank)"
+  ],
+  [
+    "1200",
+    "Bank"
+  ],
+  [
+    "1330",
+    "Schecks"
+  ],
+  [
+    "1360",
+    "Geldtransit"
+  ],
+  [
+    "1371",
+    "Verrechnungskonto für Gewinnermittlung § 4/3 EStG, nicht ergebniswirksam"
+  ],
+  [
+    "1372",
+    "Wirtschaftsgüter des Umlaufvermögens gemäß § 4 Abs. 3 Satz 4 EStG"
+  ],
+  [
+    "1562",
+    "Aufzuteilende Vorsteuer aus innergemeinschaftlichem Erwerb"
+  ],
+  [
+    "1563",
+    "Aufzuteilende Vorsteuer aus innergemeinschaftlichem Erwerb 19 %"
+  ],
+  [
+    "1564",
+    "Aufzuteilende Vorsteuer 5 %"
+  ],
+  [
+    "1565",
+    "Aufzuteilende Vorsteuer 16 %"
+  ],
+  [
+    "1568",
+    "Abziehbare Vorsteuer 5 %"
+  ],
+  [
+    "1571",
+    "Abziehbare Vorsteuer 7 %"
+  ],
+  [
+    "1572",
+    "Abziehbare Vorsteuer aus innergemeinschaftlichem Erwerb"
+  ],
+  [
+    "1574",
+    "Abziehbare Vorsteuer aus innergemeinschaftlichem Erwerb 19 %"
+  ],
+  [
+    "1575",
+    "Abziehbare Vorsteuer 16 %"
+  ],
+  [
+    "1576",
+    "Abziehbare Vorsteuer 19 %"
+  ],
+  [
+    "1577",
+    "Abziehbare Vorsteuer nach § 13b UStG 19 %"
+  ],
+  [
+    "1579",
+    "Abziehbare Vorsteuer nach § 13b UStG 16 %"
+  ],
+  [
+    "1583",
+    "Gegenkonto für Vorsteuer nach Durchschnittssätzen für § 4 Abs. 3 EStG"
+  ],
+  [
+    "1584",
+    "Abziehbare Vorsteuer aus innergemeinschaftlichem Erwerb von Neufahrzeugen von Lieferanten ohne USt-ID"
+  ],
+  [
+    "1587",
+    "Vorsteuer nach allgemeinen Durchschnittssätzen UStVA Kz. 63"
+  ],
+  [
+    "1588",
+    "Entstandene Einfuhrumsatzsteuer"
+  ],
+  [
+    "1589",
+    "Abziehbare Vorsteuer aus innergemeinschaftlichem Erwerb 16 %"
+  ],
+  [
+    "1590",
+    "Durchlaufende Posten"
+  ],
+  [
+    "1705",
+    "Darlehen"
+  ],
+  [
+    "1728",
+    "Umsatzsteuer aus im anderen EU-Land steuerpflichtigen elektronischen Dienstleistungen"
+  ],
+  [
+    "1729",
+    "Steuerzahlungen aus im anderen EU-Land steuerpflichtigen Leistungen"
+  ],
+  [
+    "1757",
+    "Umsatzsteuer Lieferungen und Leistungen nach § 13b UStG ohne Vorsteuerabzug (selbst gesch.)"
+  ],
+  [
+    "1760",
+    "Umsatzsteuer nicht fällig"
+  ],
+  [
+    "1761",
+    "Umsatzsteuer nicht fällig 7 %"
+  ],
+  [
+    "1762",
+    "Umsatzsteuer nicht fällig aus im Inland steuerpflichtigen EU-Lieferungen"
+  ],
+  [
+    "1763",
+    "Umsatzsteuer nicht fällig 5 %"
+  ],
+  [
+    "1764",
+    "Umsatzsteuer nicht fällig aus im Inland steuerpflichtigen EU-Lieferungen 19 %"
+  ],
+  [
+    "1765",
+    "Umsatzsteuer nicht fällig 16 %"
+  ],
+  [
+    "1766",
+    "Umsatzsteuer nicht fällig 19 %"
+  ],
+  [
+    "1767",
+    "Umsatzsteuer aus im anderen EU-Land steuerpflichtigen Lieferungen"
+  ],
+  [
+    "1768",
+    "Umsatzsteuer aus im anderen EU-Land steuerpflichtigen sonstigen Leistungen/Werklieferungen"
+  ],
+  [
+    "1769",
+    "Umsatzsteuer aus der Auslagerung von Gegenständen aus einem Umsatzsteuerlager"
+  ],
+  [
+    "1770",
+    "Umsatzsteuer"
+  ],
+  [
+    "1771",
+    "Umsatzsteuer 7 %"
+  ],
+  [
+    "1772",
+    "Umsatzsteuer aus innergemeinschaftlichem Erwerb"
+  ],
+  [
+    "1773",
+    "Umsatzsteuer 5 %"
+  ],
+  [
+    "1774",
+    "Umsatzsteuer aus innergemeinschaftlichem Erwerb 19 %"
+  ],
+  [
+    "1775",
+    "Umsatzsteuer 16 %"
+  ],
+  [
+    "1776",
+    "Umsatzsteuer 19 %"
+  ],
+  [
+    "1777",
+    "Umsatzsteuer aus im Inland steuerpflichtigen EU-Lieferungen"
+  ],
+  [
+    "1778",
+    "Umsatzsteuer aus im Inland steuerpflichtigen EU-Lieferungen 19 %"
+  ],
+  [
+    "1779",
+    "Umsatzsteuer aus innergemeinschaftlichem Erwerb ohne Vorsteuerabzug"
+  ],
+  [
+    "1780",
+    "Umsatzsteuer-Vorauszahlungen / -Erstattungen"
+  ],
+  [
+    "1781",
+    "Umsatzsteuer-Vorauszahlungen 1/11"
+  ],
+  [
+    "1782",
+    "Nachsteuer, UStVA Kz. 65"
+  ],
+  [
+    "1783",
+    "In Rechnung unrichtig oder unberechtigt ausgewiesene Steuerbeträge, UStVA Kz. 69"
+  ],
+  [
+    "1784",
+    "Umsatzsteuer aus innergemeinschaftlichem Erwerb von Neufahrzeugen von Lieferanten ohne Umsatzsteuer-ID"
+  ],
+  [
+    "1785",
+    "Umsatzsteuer nach § 13b UStG"
+  ],
+  [
+    "1786",
+    "Umsatzsteuer nach § 13b UStG 16 %"
+  ],
+  [
+    "1787",
+    "Umsatzsteuer nach § 13b UStG 19 %"
+  ],
+  [
+    "1788",
+    "Einfuhrumsatzsteuer aufgeschoben bis"
+  ],
+  [
+    "1789",
+    "Umsatzsteuer laufendes Jahr"
+  ],
+  [
+    "1790",
+    "Umsatzsteuerverbindlichkeiten Vorjahr"
+  ],
+  [
+    "1791",
+    "Umsatzsteuerverbindlichkeiten frühere Jahre"
+  ],
+  [
+    "1798",
+    "Umsatzsteuer aus im Inland steuerpflichtigen EU-Lieferungen, nur OSS"
+  ],
+  [
+    "1799",
+    "Umsatzsteuer aus innergemeinschaftlichem Erwerb 5 % (selbst gesch.)"
+  ],
+  [
+    "1800",
+    "Privatentnahmen allgemein"
+  ],
+  [
+    "1880",
+    "Unentgeltliche Wertabgaben"
+  ],
+  [
+    "1890",
+    "Privateinlagen"
+  ],
+  [
+    "2100",
+    "Zinsen und ähnliche Aufwendungen"
+  ],
+  [
+    "2120",
+    "Zinsaufwendungen für langfristige Verbindlichkeiten"
+  ],
+  [
+    "2140",
+    "Zinsähnliche Aufwendungen"
+  ],
+  [
+    "2300",
+    "Sonstige Aufwendungen"
+  ],
+  [
+    "2310",
+    "Anlagenabgänge Sachanlagen (Restbuchwert bei Buchverlust)"
+  ],
+  [
+    "2311",
+    "Anlagenabgänge immaterielle Vermögensgegenstände (Restbuchwert bei Buchverlust)"
+  ],
+  [
+    "2314",
+    "Restbuchwert GWG Sofortabschreibung (bei Buchverlust - selbst gesch.)"
+  ],
+  [
+    "2320",
+    "Verluste aus dem Abgang von Gegenständen des Anlagevermögens"
+  ],
+  [
+    "2327",
+    "Abgang von Wirtschaftsgütern des Umlaufvermögens nach § 4 Abs. 3 Satz 4 EStG"
+  ],
+  [
+    "2328",
+    "Abgang von Wirtschaftsgütern des Umlaufvermögens § 3 Nr. 40 EStG bzw. § 8b Abs. 2 KStG i. V. m. § 8b Abs. 3 S. 3 KStG nach § 4 Abs. 3 Satz 4 EStG"
+  ],
+  [
+    "2500",
+    "Außerordentliche Erträge (selbst gesch.)"
+  ],
+  [
+    "2650",
+    "Sonstige Zinsen und ähnliche Erträge"
+  ],
+  [
+    "2700",
+    "Sonstige betriebliche Erträge"
+  ],
+  [
+    "2720",
+    "Erträge aus dem Abgang von Gegenständen des Anlagevermögens"
+  ],
+  [
+    "2742",
+    "Versicherungsentschädigungen und Schadensersatzleistungen"
+  ],
+  [
+    "2743",
+    "Investitionszuschüsse (steuerpflichtig)"
+  ],
+  [
+    "2744",
+    "Investitionszulagen (steuerfrei)"
+  ],
+  [
+    "2747",
+    "Sonstige ertragssteuerfreie Betriebseinnahmen"
+  ],
+  [
+    "2753",
+    "Hilfen / Zuschüsse auf Grund der Corona-Pandemie (selbst gesch.)"
+  ],
+  [
+    "2754",
+    "Zurückgezahlte Hilfen / Zuschüsse auf Grund der Corona-Pandemie (selbst gesch.)"
+  ],
+  [
+    "3123",
+    "Sonstige Leistungen eines im anderen EU-Land ansässigen Unternehmers 19 % Vorsteuer und 19 % Umsatzsteuer"
+  ],
+  [
+    "3125",
+    "Leistungen eines im Ausland ansässigen Unternehmers 19 % Vorsteuer und 19 % Umsatzsteuer"
+  ],
+  [
+    "3165",
+    "Leistungen nach § 13b UStG ohne Vorsteuerabzug"
+  ],
+  [
+    "3200",
+    "Wareneingang"
+  ],
+  [
+    "3420",
+    "Innergemeinschaftlicher Erwerb 7 % Vorsteuer und 7 % Umsatzsteuer"
+  ],
+  [
+    "3425",
+    "Innergemeinschaftlicher Erwerb 19 % Vorsteuer und 19 % Umsatzsteuer"
+  ],
+  [
+    "3730",
+    "Erhaltene Skonti"
+  ],
+  [
+    "3733",
+    "Erhaltene Skonti aus Einkauf Roh-, Hilfs- und Betriebsstoffe"
+  ],
+  [
+    "3741",
+    "Erhaltene Skonti aus Einkauf Roh-, Hilfs- und Betriebsstoffe aus steuerpflichtigem innergemeinschaftlichen Erwerb 19 % Vorsteuer und 19 % Umsatzsteuer"
+  ],
+  [
+    "3743",
+    "Erhaltene Skonti aus Einkauf Roh-, Hilfs- und Betriebsstoffe aus steuerpflichtigem innergemeinschaftlichen Erwerb 7 % Vorsteuer und 7 % Umsatzsteuer"
+  ],
+  [
+    "3744",
+    "Erhaltene Skonti aus Einkauf Roh-, Hilfs- und Betriebsstoffe aus steuerpflichtigem innergemeinschaftlichem Erwerb"
+  ],
+  [
+    "3746",
+    "Erhaltene Skonti aus steuerpflichtigem innergemeinschaftlichem Erwerb 7 % Vorsteuer und 7 % Umsatzsteuer"
+  ],
+  [
+    "3748",
+    "Erhaltene Skonti aus steuerpflichtigem innergemeinschaftlichem Erwerb 19 % Vorsteuer und 19 % Umsatzsteuer"
+  ],
+  [
+    "4010",
+    "Material- und Stoffverbrauch (Aufwendungen für Roh-, Hilfs- und Betriebsstoffe und für bezogene Waren)"
+  ],
+  [
+    "4100",
+    "Löhne und Gehälter"
+  ],
+  [
+    "4110",
+    "Löhne"
+  ],
+  [
+    "4120",
+    "Gehälter"
+  ],
+  [
+    "4130",
+    "Gesetzliche soziale Aufwendungen"
+  ],
+  [
+    "4138",
+    "Beiträge zur Berufsgenossenschaft"
+  ],
+  [
+    "4139",
+    "Ausgleichsabgabe i. S. d. Schwerbehindertengesetzes"
+  ],
+  [
+    "4140",
+    "Freiwillige soziale Aufwendungen, lohnsteuerfrei"
+  ],
+  [
+    "4145",
+    "Freiwillige soziale Aufwendungen, lohnsteuerpflichtig"
+  ],
+  [
+    "4146",
+    "Freiwillige Zuwendungen an Minijobber"
+  ],
+  [
+    "4148",
+    "Freiwillige Zuwendungen an angestellte Mitunternehmer § 15 EStG (mit Sonderbetriebseinnahme korrespondierend)"
+  ],
+  [
+    "4149",
+    "Pauschale Steuer auf sonstige Bezüge (z. B. Fahrtkostenzuschüsse)"
+  ],
+  [
+    "4150",
+    "Krankengeldzuschüsse"
+  ],
+  [
+    "4151",
+    "Sachzuwendungen und Dienstleistungen an Minijobber"
+  ],
+  [
+    "4155",
+    "Zuschüsse der Agenturen für Arbeit (Haben)"
+  ],
+  [
+    "4160",
+    "Versorgungskassen"
+  ],
+  [
+    "4165",
+    "Aufwendungen für Altersversorgung"
+  ],
+  [
+    "4167",
+    "Pauschale Steuer auf sonstige Bezüge (z. B. Direktversicherungen)"
+  ],
+  [
+    "4169",
+    "Aufwendungen für Unterstützung"
+  ],
+  [
+    "4170",
+    "Vermögenswirksame Leistungen"
+  ],
+  [
+    "4175",
+    "Fahrtkostenerstattung - Wohnung / Arbeitsstätte"
+  ],
+  [
+    "4180",
+    "Bedienungsgelder"
+  ],
+  [
+    "4190",
+    "Aushilfslöhne"
+  ],
+  [
+    "4199",
+    "Pauschale Steuer für Aushilfen"
+  ],
+  [
+    "4200",
+    "Raumkosten"
+  ],
+  [
+    "4210",
+    "Miete (unbewegliche Wirtschaftsgüter)"
+  ],
+  [
+    "4215",
+    "Leasing (unbewegliche Wirtschaftsgüter)"
+  ],
+  [
+    "4220",
+    "Pacht (unbewegliche Wirtschaftsgüter)"
+  ],
+  [
+    "4228",
+    "Miet- und Pachtnebenkosten, die gewerbesteuerlich nicht hinzuzurechnen sind"
+  ],
+  [
+    "4230",
+    "Heizung"
+  ],
+  [
+    "4240",
+    "Gas, Strom, Wasser"
+  ],
+  [
+    "4250",
+    "Büro- / Raumreinigung"
+  ],
+  [
+    "4260",
+    "Instandhaltung betrieblicher Räume"
+  ],
+  [
+    "4270",
+    "Abgaben für betrieblich genutzten Grundbesitz"
+  ],
+  [
+    "4280",
+    "Sonstige Raumkosten"
+  ],
+  [
+    "4287",
+    "Tagespauschale für die Tätigkeit in der häuslichen Wohnung"
+  ],
+  [
+    "4288",
+    "Aufwendungen für ein häusliches Arbeitszimmer (abziehbarer Anteil)"
+  ],
+  [
+    "4289",
+    "Aufwendungen für ein häusliches Arbeitszimmer (nicht abziehbarer Anteil)"
+  ],
+  [
+    "4290",
+    "Grundstücksaufwendungen, betrieblich"
+  ],
+  [
+    "4320",
+    "Gewerbesteuer"
+  ],
+  [
+    "4340",
+    "Sonstige Betriebssteuern"
+  ],
+  [
+    "4350",
+    "Verbrauchsteuer (sonstige Steuern)"
+  ],
+  [
+    "4360",
+    "Versicherungen"
+  ],
+  [
+    "4380",
+    "Beiträge"
+  ],
+  [
+    "4390",
+    "Sonstige Abgaben"
+  ],
+  [
+    "4396",
+    "Steuerlich abzugsfähige Verspätungszuschläge und Zwangsgelder"
+  ],
+  [
+    "4397",
+    "Steuerlich nicht abzugsfähige Verspätungszuschläge und Zwangsgelder"
+  ],
+  [
+    "4500",
+    "Fahrzeugkosten (selbst gesch.)"
+  ],
+  [
+    "4510",
+    "Kfz-Steuer"
+  ],
+  [
+    "4520",
+    "Kfz-Versicherungen"
+  ],
+  [
+    "4530",
+    "Laufende Fahrzeug-Betriebskosten"
+  ],
+  [
+    "4540",
+    "Fahrzeug-Reparaturen"
+  ],
+  [
+    "4550",
+    "Garagenmiete"
+  ],
+  [
+    "4560",
+    "Mautgebühren"
+  ],
+  [
+    "4570",
+    "Mietleasing Kfz"
+  ],
+  [
+    "4575",
+    "Mietleasingaufwendungen für Elektrofahrzeuge und Fahrräder, die gewerbesteuerlich hinzuzurechnen sind"
+  ],
+  [
+    "4580",
+    "Sonstige Fahrzeugkosten"
+  ],
+  [
+    "4590",
+    "Kosten für betrieblich genutzte zum Privatvermögen gehörende Fahrzeuge"
+  ],
+  [
+    "4595",
+    "Fremdfahrzeugkosten"
+  ],
+  [
+    "4600",
+    "Werbekosten"
+  ],
+  [
+    "4630",
+    "Geschenke abzugsfähig ohne § 37b EStG"
+  ],
+  [
+    "4635",
+    "Geschenke nicht abzugsfähig ohne § 37b EStG"
+  ],
+  [
+    "4640",
+    "Repräsentationskosten"
+  ],
+  [
+    "4645",
+    "Homeoffice-Pauschale (Tagespauschale, § 4 Abs. 5 Satz 1 Nr. 6b Satz 4 EStG) (selbst gesch.)"
+  ],
+  [
+    "4650",
+    "Bewirtungskosten (nicht abziehbarer Teil über Konto 4654 (SKR03) / 6644 (SKR04) / 465400 (SKRBPA/SKRBPZ))"
+  ],
+  [
+    "4651",
+    "Sonstige eingeschränkt abziehbare Betriebsausgaben (abziehbarer Anteil)"
+  ],
+  [
+    "4652",
+    "Sonstige eingeschränkt abziehbare Betriebsausgaben (nicht abziehbarer Anteil)"
+  ],
+  [
+    "4653",
+    "Aufmerksamkeiten"
+  ],
+  [
+    "4654",
+    "Nicht abzugsfähige Bewirtungskosten"
+  ],
+  [
+    "4655",
+    "Nicht abzugsfähige Betriebsausgaben aus Werbe- und Repräsentationskosten"
+  ],
+  [
+    "4660",
+    "Reisekosten Arbeitnehmer"
+  ],
+  [
+    "4663",
+    "Reisekosten Arbeitnehmer Fahrtkosten"
+  ],
+  [
+    "4664",
+    "Reisekosten Arbeitnehmer Verpflegungsmehraufwand"
+  ],
+  [
+    "4666",
+    "Reisekosten Arbeitnehmer Übernachtungsaufwand"
+  ],
+  [
+    "4668",
+    "Kilometergelderstattung Arbeitnehmer"
+  ],
+  [
+    "4670",
+    "Reisekosten Unternehmer (selbst gesch.)"
+  ],
+  [
+    "4672",
+    "Reisekosten Unternehmer (nicht abziehbarer Anteil)"
+  ],
+  [
+    "4673",
+    "Reisekosten Unternehmer Fahrtkosten"
+  ],
+  [
+    "4674",
+    "Reisekosten Unternehmer Verpflegungsmehraufwand"
+  ],
+  [
+    "4676",
+    "Reisekosten Unternehmer Übernachtungsaufwand und Reisenebenkosten"
+  ],
+  [
+    "4678",
+    "Fahrten zwischen Wohnung und Betriebsstätte und Familienheimfahrten (abziehbarer Anteil) - Fahrzeuge im Betriebsvermögen"
+  ],
+  [
+    "4679",
+    "Fahrten zwischen Wohnung und Betriebsstätte und Familienheimfahrten (nicht abziehbarer Anteil) - Fahrzeuge im Betriebsvermögen"
+  ],
+  [
+    "4680",
+    "Fahrten zwischen Wohnung und Betriebsstätte und Familienheimfahrten (Haben) - Fahrzeuge im Betriebsvermögen"
+  ],
+  [
+    "4700",
+    "Kosten der Warenabgabe"
+  ],
+  [
+    "4710",
+    "Verpackungsmaterial"
+  ],
+  [
+    "4730",
+    "Ausgangsfrachten"
+  ],
+  [
+    "4750",
+    "Transportversicherungen"
+  ],
+  [
+    "4760",
+    "Verkaufsprovisionen"
+  ],
+  [
+    "4780",
+    "Fremdarbeiten (Vertrieb)"
+  ],
+  [
+    "4790",
+    "Aufwand für Gewährleistungen"
+  ],
+  [
+    "4800",
+    "Reparaturen und Instandhaltung von technischen Anlagen und Maschinen"
+  ],
+  [
+    "4805",
+    "Reparaturen und Instandhaltung von anderen Anlagen und Betriebs- und Geschäftsausstattung"
+  ],
+  [
+    "4806",
+    "Wartungskosten für Hard- und Software"
+  ],
+  [
+    "4809",
+    "Sonstige Reparaturen und Instandhaltung"
+  ],
+  [
+    "4810",
+    "Mietleasing bewegliche Wirtschaftsgüter für technische Anlagen und Maschinen"
+  ],
+  [
+    "4815",
+    "Kaufleasing"
+  ],
+  [
+    "4822",
+    "Abschreibungen auf immaterielle Vermögensgegenstände"
+  ],
+  [
+    "4824",
+    "Abschreibungen auf den Geschäfts- oder Firmenwert"
+  ],
+  [
+    "4826",
+    "Außerplanmäßige Abschreibungen auf immaterielle Vermögensgegenstände"
+  ],
+  [
+    "4830",
+    "Abschreibungen auf Sachanlagen (ohne AfA auf Fahrzeuge und Gebäude)"
+  ],
+  [
+    "4831",
+    "Abschreibungen auf Gebäude"
+  ],
+  [
+    "4832",
+    "Abschreibungen auf Fahrzeuge"
+  ],
+  [
+    "4833",
+    "Abschreibungen auf Gebäudeanteil des häuslichen Arbeitszimmers"
+  ],
+  [
+    "4840",
+    "Außerplanmäßige Abschreibungen auf Sachanlagen"
+  ],
+  [
+    "4841",
+    "Absetzung für außergewöhnliche technische und wirtschaftliche Abnutzung der Gebäude"
+  ],
+  [
+    "4842",
+    "Absetzung für außergewöhnliche technische und wirtschaftliche Abnutzung der Fahrzeuge"
+  ],
+  [
+    "4843",
+    "Absetzung für außergewöhnliche technische und wirtschaftliche Abnutzung sonstiger Wirtschaftsgüter"
+  ],
+  [
+    "4850",
+    "Abschreibungen auf Sachanlagen auf Grund steuerlicher Sondervorschriften"
+  ],
+  [
+    "4851",
+    "Sonderabschreibungen nach § 7g Abs. 5 EStG (ohne Fahrzeuge)"
+  ],
+  [
+    "4852",
+    "Sonderabschreibungen nach § 7g Abs. 5 EStG (für Fahrzeuge)"
+  ],
+  [
+    "4853",
+    "Kürzung der Anschaffungs- oder Herstellungskosten nach § 7g Abs. 2 EStG (ohne Fahrzeuge)"
+  ],
+  [
+    "4854",
+    "Kürzung der Anschaffungs- oder Herstellungskosten nach § 7g Abs. 2 EStG (für Fahrzeuge)"
+  ],
+  [
+    "4855",
+    "Sofortabschreibung geringwertiger Wirtschaftsgüter"
+  ],
+  [
+    "4856",
+    "Sofortabschreibungen nach § 7b EStG (Mietwohnungsneubau)"
+  ],
+  [
+    "4860",
+    "Abschreibungen auf aktivierte, geringwertige Wirtschaftsgüter"
+  ],
+  [
+    "4862",
+    "Abschreibungen auf den Sammelposten Wirtschaftsgüter"
+  ],
+  [
+    "4865",
+    "Außerplanmäßige Abschreibungen auf aktivierte, geringwertige Wirtschaftsgüter"
+  ],
+  [
+    "4870",
+    "Abschreibungen auf Finanzanlagen (dauerhaft - selbst gesch.)"
+  ],
+  [
+    "4900",
+    "Sonstige betriebliche Aufwendungen"
+  ],
+  [
+    "4905",
+    "Sonstige Aufwendungen betrieblich und regelmäßig"
+  ],
+  [
+    "4910",
+    "Porto"
+  ],
+  [
+    "4920",
+    "Telefon"
+  ],
+  [
+    "4925",
+    "Internetkosten"
+  ],
+  [
+    "4930",
+    "Bürobedarf"
+  ],
+  [
+    "4940",
+    "Zeitschriften, Bücher, digitale Medien (Fachliteratur)"
+  ],
+  [
+    "4945",
+    "Fortbildungskosten"
+  ],
+  [
+    "4946",
+    "Freiwillige Sozialleistungen"
+  ],
+  [
+    "4950",
+    "Rechts- und Beratungskosten"
+  ],
+  [
+    "4955",
+    "Buchführungskosten"
+  ],
+  [
+    "4957",
+    "Abschluss- und Prüfungskosten"
+  ],
+  [
+    "4960",
+    "Mieten für Einrichtungen (bewegliche Wirtschaftsgüter)"
+  ],
+  [
+    "4970",
+    "Nebenkosten des Geldverkehrs"
+  ],
+  [
+    "4971",
+    "Verwahrentgelt"
+  ],
+  [
+    "4980",
+    "Sonstiger Betriebsbedarf"
+  ],
+  [
+    "4985",
+    "Werkzeuge und Kleingeräte"
+  ],
+  [
+    "8100",
+    "Steuerfreie Umsätze § 4 Nr. 8 ff UStG"
+  ],
+  [
+    "8105",
+    "Steuerfreie Umsätze nach § 4 Nr. 12 UStG (Vermietung und Verpachtung)"
+  ],
+  [
+    "8110",
+    "Sonstige steuerfreie Umsätze Inland"
+  ],
+  [
+    "8120",
+    "Steuerfreie Umsätze § 4 Nr. 1a UStG"
+  ],
+  [
+    "8125",
+    "Steuerfreie innergemeinschaftliche Lieferungen § 4 Nr. 1b UStG"
+  ],
+  [
+    "8130",
+    "Lieferungen des ersten Abnehmers bei innergemeinschaftlichen Dreiecksgeschäften § 25b Abs. 2 UStG"
+  ],
+  [
+    "8150",
+    "Sonstige steuerfreie Umsätze (z. B. § 4 Nr. 2-7 UStG)"
+  ],
+  [
+    "8190",
+    "Erlöse, die mit den Durchschnittssätzen des § 24 UStG versteuert werden"
+  ],
+  [
+    "8192",
+    "Steuerfreie Erlöse Kleinunternehmer nach § 19 Abs. 1 UStG"
+  ],
+  [
+    "8195",
+    "Erlöse als Kleinunternehmer nach § 19 Abs. 1 UStG"
+  ],
+  [
+    "8200",
+    "Umsatzsteuerpflichtige Erlöse"
+  ],
+  [
+    "8290",
+    "Erlöse 0 % USt"
+  ],
+  [
+    "8310",
+    "Erlöse aus im Inland steuerpflichtigen EU-Lieferungen 7 % USt"
+  ],
+  [
+    "8315",
+    "Erlöse aus im Inland steuerpflichtigen EU-Lieferungen 19 % USt"
+  ],
+  [
+    "8320",
+    "Erlöse aus im anderen EU-Land steuerpflichtigen Lieferungen, im Inland nicht steuerbar (OSS)"
+  ],
+  [
+    "8331",
+    "Erlöse aus im anderen EU-Land steuerpflichtigen elektronischen Dienstleistungen"
+  ],
+  [
+    "8335",
+    "Erlöse aus der Lieferung von Mobilfunkgeräten, Tablet-Computern, Spielekonsolen, integrierten Schaltkreisen, § 13b UStG"
+  ],
+  [
+    "8336",
+    "Erlöse aus im anderen EU-Land steuerpfl. sonst. Leistungen, für die der Leistungsempfänger die Umsatzsteuer schuldet"
+  ],
+  [
+    "8337",
+    "Erlöse aus Leistungen, für die der Leistungsempfänger die Umsatzsteuer nach § 13b UStG schuldet"
+  ],
+  [
+    "8338",
+    "Erlöse aus im Drittland steuerbaren Leistungen, im Inland nicht steuerbare Umsätze"
+  ],
+  [
+    "8339",
+    "Erlöse aus im anderen EU-Land steuerbaren Leistungen, im Inland nicht steuerbare Umsätze (OSS )"
+  ],
+  [
+    "8350",
+    "Erlöse aus Umsätzen mit Dienstleistungen (OSS - selbst gesch.)"
+  ],
+  [
+    "8351",
+    "Erlöse aus Umsätzen für vom Inland aus durchgeführte Warenlieferungen (OSS - selbst gesch.)"
+  ],
+  [
+    "8352",
+    "Erlöse aus Umsätzen der festen Niederlassung mit Dienstleistungen (OSS - selbst gesch.)"
+  ],
+  [
+    "8353",
+    "Erlöse aus Umsätzen für aus anderen Mitgliedstaaten durchgeführte Warenlieferungen (OSS - selbst gesch.)"
+  ],
+  [
+    "8510",
+    "Provisionsumsätze"
+  ],
+  [
+    "8514",
+    "Provisionsumsätze, steuerfrei (§ 4 Nr. 8 ff. UStG)"
+  ],
+  [
+    "8515",
+    "Provisionsumsätze, steuerfrei (§ 4 Nr. 5 UStG)"
+  ],
+  [
+    "8600",
+    "Sonstige Erlöse betrieblich und regelmäßig"
+  ],
+  [
+    "8603",
+    "Sonstige betriebliche Erträge"
+  ],
+  [
+    "8609",
+    "Sonstige Erträge betrieblich und regelmäßig, steuerfrei § 4 Nr. 8 ff UStG"
+  ],
+  [
+    "8610",
+    "Verrechnete sonstige Sachbezüge"
+  ],
+  [
+    "8730",
+    "Gewährte Skonti"
+  ],
+  [
+    "8741",
+    "Gewährte Skonti aus Leistungen, für die der Leistungsempfänger die Umsatzsteuer nach § 13b UStG schuldet"
+  ],
+  [
+    "8742",
+    "Gewährte Skonti aus Erlösen aus im and. EU-Land steuerpflichtigen sonst. Leistungen, für die der LE die Steuer schuldet"
+  ],
+  [
+    "8743",
+    "Gewährte Skonti aus steuerfreien innergemeinschaftlichen Lieferungen § 4 Nr. 1b UStG"
+  ],
+  [
+    "8745",
+    "Gewährte Skonti aus im Inland steuerpflichtigen EU-Lieferungen"
+  ],
+  [
+    "8746",
+    "Gewährte Skonti aus im Inland steuerpflichtigen EU-Lieferungen 7 % USt"
+  ],
+  [
+    "8748",
+    "Gewährte Skonti aus im Inland steuerpflichtigen EU-Lieferungen 19 % USt"
+  ],
+  [
+    "8800",
+    "Erlöse aus Verkäufen Sachanlagevermögen (bei Buchverlust)"
+  ],
+  [
+    "8817",
+    "Erlöse aus Verkäufen immaterieller Vermögensgegenstände (bei Buchverlust)"
+  ],
+  [
+    "8850",
+    "Erlöse aus Verkäufen außergewöhnlichen Umlaufvermögens 19 % USt für § 4 Abs. 3 Satz 4 EStG"
+  ],
+  [
+    "8900",
+    "Unentgeltliche Wertabgaben"
+  ],
+  [
+    "8905",
+    "Entnahmen von Gegenständen ohne USt"
+  ],
+  [
+    "8918",
+    "Verwendung von Gegenständen für Zwecke außerhalb des Unternehmens ohne USt (Telefon- Nutzung)"
+  ],
+  [
+    "8919",
+    "Entnahme durch den Unternehmer für Zwecke außerhalb des Unternehmens (Waren) ohne USt"
+  ],
+  [
+    "8924",
+    "Verwendung von Gegenständen für Zwecke außerhalb des Unternehmens ohne USt (Fahrzeug- Nutzung)"
+  ],
+  [
+    "8929",
+    "Unentgeltliche Erbringung einer sonstigen Leistung ohne USt"
+  ],
+  [
+    "8939",
+    "Unentgeltliche Zuwendung von Gegenständen ohne USt"
+  ],
+  [
+    "8949",
+    "Unentgeltliche Zuwendung von Waren ohne USt"
+  ],
+  [
+    "8950",
+    "Nicht steuerbare Umsätze (Innenumsätze)"
+  ],
+  [
+    "9000",
+    "Saldenvorträge, Sachkonten"
+  ],
+  [
+    "9966",
+    "Hinzurechnung Investitionsabzugsbetrag § 7g Abs. 2 EStG aus dem 6. vorangegangenen Wirtschaftsjahr, außerbilanziell (Haben)"
+  ],
+  [
+    "9967",
+    "Rückgängigmachung Investitionsabzugsbetrag § 7g Abs. 3 und 4 EStG im 6. vorangegangenen Wirtschaftsjahr"
+  ],
+  [
+    "9968",
+    "Hinzurechnung Investitionsabzugsbetrag § 7g Abs. 2 EStG aus dem 5. vorangegangenen Wirtschaftsjahr, außerbilanziell (Haben)"
+  ],
+  [
+    "9969",
+    "Rückgängigmachung Investitionsabzugsbetrag § 7g Abs. 3 und 4 EStG im 5. vorangegangenen Wirtschaftsjahr"
+  ],
+  [
+    "9970",
+    "Investitionsabzugsbetrag § 7g Abs. 1 EStG, außerbilanziell (Soll)"
+  ],
+  [
+    "9971",
+    "Investitionsabzugsbetrag § 7g Abs. 1 EStG, außerbilanziell (Haben) - Gegenkonto zu 9970"
+  ],
+  [
+    "9972",
+    "Hinzurechnung Investitionsabzugsbetrag § 7g Abs. 2 EStG aus dem vorangegangenen Wirtschaftsjahr, außerbilanziell (Haben)"
+  ],
+  [
+    "9973",
+    "Hinzurechnung Investitionsabzugsbetrag § 7g Abs. 2 EStG aus den vorangegangenen Wirtschaftsjahren, außerbilanziell (Soll)-Gegenkonto 9972, 9916, 9917"
+  ],
+  [
+    "9974",
+    "Rückgängigmachung Investitionsabzugsbetrag § 7g Abs. 3, 4 EStG im vorangegangenen Wirtschaftsjahr"
+  ],
+  [
+    "9975",
+    "Rückgängigmachung Investitionsabzugsbetrag § 7g Abs. 3 und 4 EStG in den vorangegangenen Wirtschaftsjahren - Gegenkonto zu 9974, 9918, 9919"
+  ]
+]

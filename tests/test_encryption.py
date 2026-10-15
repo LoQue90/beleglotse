@@ -26,6 +26,6 @@ class EncryptedPdfTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Öffnungspasswort'):app.extract(path,ocr=False)
     def test_missing_dependency_message(self):
         with patch.object(recognition,'PdfReader',side_effect=recognition.DependencyError('cryptography>=3.1 is required')):
-            with self.assertRaisesRegex(ValueError,'Start.cmd'):app.extract(Path('dummy.pdf'))
+            with self.assertRaisesRegex(ValueError,'Start.cmd'):app.extract(Path('dummy.pdf'),fingerprint='dependency-test')
 
 if __name__=='__main__':unittest.main()

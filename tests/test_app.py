@@ -21,7 +21,7 @@ class WorkflowTests(unittest.TestCase):
     def plan(self): return app.make_plan({'settings':self.settings,'rows':[self.row]})
     def test_exact_tsv_and_move_and_duplicate(self):
         p=self.plan()
-        self.assertEqual(p['tsv'],'Ausgabe\t28.01.2026\tVTUER26001\tDHL\t6,19 €\tNULL\t4910\t1200\r\n')
+        self.assertEqual(p['tsv'],'Ausgabe\t28.01.2026\tVTUER26001\tDHL\t6,19 €\t4910\tKeine Vorsteuer\t1200\r\n')
         self.assertTrue(self.source.exists())
         r=app.execute(p['id']); self.assertFalse(self.source.exists())
         self.assertEqual(Path(p['items'][0]['destination']).read_bytes(),b'%PDF-test-content')
@@ -43,7 +43,35 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.plan()
     def test_signed_amounts(self):
         self.row['amount']='-1.234,56';self.assertIn('-1234,56 €',self.plan()['tsv'])
-        self.row['amount']='0,00';self.assertIn('0,00 €',self.plan()['tsv'])
+        self.row['amount']='0,00';self.assertEqual(self.plan()['tsv'],'')
+    def test_zero_only_archive_and_duplicate(self):
+        self.row['amount']='-0,00';p=self.plan()
+        self.assertEqual(p['export'],'');self.assertTrue(p['items'][0]['metadata']['archive_only'])
+        result=app.execute(p['id']);self.assertEqual((result['exported'],result['archived_only']),(0,1))
+        self.assertFalse(self.source.exists());self.assertTrue(Path(p['items'][0]['destination']).exists())
+        self.assertEqual(list(self.target.rglob('*.tsv')),[])
+        saved=app.history()[0];self.assertTrue(saved['archive_only']);self.assertEqual(saved['export'],'')
+        self.source.write_bytes(b'%PDF-test-content')
+        with self.assertRaisesRegex(ValueError,'bereits exportierte'):self.plan()
+    def test_mixed_archive_export_and_numbering(self):
+        self.row['amount']='0,00'
+        other=self.root/'credit.pdf';other.write_bytes(b'%PDF-credit-content')
+        app.SCANS['two']={'path':other,'hash':app.digest(other)}
+        credit=self.row|dict(id='two',date='2026-01-29',number='CREDIT',amount='-5,00')
+        p=app.make_plan({'settings':self.settings,'rows':[self.row,credit]})
+        self.assertEqual(p['tsv'],'Ausgabe\t29.01.2026\tVTUER26002\tDHL\t-5,00 €\t4910\tKeine Vorsteuer\t1200\r\n')
+        result=app.execute(p['id']);self.assertEqual((result['exported'],result['archived_only']),(1,1))
+        history=app.history();self.assertEqual(len(history),2)
+        self.assertEqual(next(x['export'] for x in history if x['archive_only']),'')
+        self.assertEqual(app.settings()['counters']['2026'],2)
+    def test_zero_archive_copy_failure_rolls_back(self):
+        self.row['amount']='0,00';p=self.plan();original=Path.open
+        def fail(path,*args,**kwargs):
+            if str(path)==p['items'][0]['destination']:raise OSError('disk full')
+            return original(path,*args,**kwargs)
+        with patch.object(Path,'open',fail):
+            with self.assertRaises(OSError):app.execute(p['id'])
+        self.assertTrue(self.source.exists());self.assertEqual(app.history(),[]);self.assertEqual(app.settings()['counters'],{})
     def test_write_failure_rolls_back_copies(self):
         p=self.plan()
         original=Path.open

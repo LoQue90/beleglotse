@@ -64,25 +64,27 @@ class DiscoveryTests(unittest.TestCase):
         app.DATABASE,app.LOCAL=self.old;app.SCANS.clear();app.PLANS.clear();app.DISCOVERIES.clear();self.temp.cleanup()
 
     def test_scan_confirm_merge_and_rescan(self):
-        result=app.discover(str(self.root));self.assertEqual(len(result['groups']),2)
+        result=app.discover(str(self.root));self.assertEqual(len(result['groups']),1)
         self.assertEqual(app.settings()['rules'],{})
-        g=next(g for g in result['groups'] if g['kind']=='vat');self.assertEqual(len(g['files']),2)
+        g=next(g for g in result['groups'] if g['kind']=='vat');self.assertEqual(len({f['id'] for f in g['files']}),2);self.assertEqual(len(g['identifiers']),2)
         self.assertEqual(g['name'],'Versand GmbH')
         with self.assertRaises(ValueError):app.confirm_discovery({'id':g['id'],'name':'Versand'})
         app.confirm_discovery({'id':g['id'],'name':'Versand','confirmed':True})
-        t=next(g for g in result['groups'] if g['kind']=='tax')
-        app.confirm_discovery({'id':t['id'],'name':'Versand','country':'DE','confirmed':True})
         rule=app.settings()['rules']['Versand'];self.assertEqual(rule['aliases'],[])
         self.assertEqual(rule['vat_ids'],['DE123456789']);self.assertEqual(rule['tax_ids'],['DE:12345678901'])
         self.assertEqual([r['provider'] for r in app.scan(str(self.root))],['Versand','Versand'])
         with self.assertRaises(ValueError):app.confirm_discovery({'id':g['id'],'name':'Other','confirmed':True})
 
-    def test_own_and_duplicate_ownership_blocked(self):
+    def test_own_ids_blocked_shared_ids_require_name(self):
         s=app.settings();s['own_vat']=['DE123456789'];s['own_tax']=['DE:12345678901'];app.save_settings(s)
-        result=app.discover(str(self.root));self.assertEqual(result['groups'],[]);self.assertEqual(len(result['unresolved']),2)
+        result=app.discover(str(self.root));self.assertTrue(result['groups']);self.assertTrue(all(g['kind']=='name' for g in result['groups']))
+        self.assertTrue(all(not c['vat_ids'] and not c['tax_ids'] for row in app.SCANS for c in app.provider_suggestions({'id':row})['candidates']))
         with self.assertRaisesRegex(ValueError,'Eigene'):app.save_rule({'name':'Own','vat_ids':['DE123456789']})
         app.save_rule({'name':'A','vat_ids':['DE987654321']})
-        with self.assertRaisesRegex(ValueError,'anderen'):app.save_rule({'name':'B','vat_ids':['DE987654321']})
+        app.save_rule({'name':'B','vat_ids':['DE987654321']})
+        self.assertEqual(extract_fields('DE987654321',app.settings()['rules'])['provider'],'')
+        app.save_rule({'name':'B','vat_ids':['DE987654321'],'aliases':['B GmbH']})
+        self.assertEqual(extract_fields('B GmbH DE987654321',app.settings()['rules'])['provider'],'B')
 
     def test_identifiers_survive_edit_and_year_copy(self):
         app.save_rule({'name':'Firma','vat_ids':['DE123456789']})

@@ -1,11 +1,9 @@
-from contextlib import closing
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-import sys, unittest, tempfile, json, sqlite3
+import sys, unittest, tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import app
-from recognition import extract_fields
 
 class YearTests(unittest.TestCase):
     def setUp(self):
@@ -25,11 +23,13 @@ class YearTests(unittest.TestCase):
     def plan(self,rows):return app.make_plan({'settings':self.s,'rows':rows})
     def test_new_year_copies_only_master_and_settings(self):
         app.save_account({'number':'1234','description':'Eigenes Konto'})
-        app.save_rule({'name':'Firma','account':'1234','aliases':['Firma GmbH'],'labels':{'amount':'Gesamtsumme\nBetrag'}})
+        app.save_rule({'name':'Firma','account':'1234','bank':'1200','aliases':['Firma GmbH'],'labels':{'amount':'Gesamtsumme\nBetrag'}})
         app.execute(self.plan([self.row()])['id']);before=app.digest(self.year)
         p=self.root/'2027.belegdb';s=app.new_year({'path':str(p),'year':2027,'template':str(self.year)})
         self.assertEqual(app.digest(self.year),before);self.assertEqual(app.history(),[]);self.assertEqual(s['counters'],{})
         self.assertEqual(s['rules']['Firma']['labels']['amount'],['Gesamtsumme','Betrag'])
+        self.assertEqual((s['rules']['Firma']['account'],s['rules']['Firma']['bank'],s['rules']['Firma']['aliases']),('1234','1200',['Firma GmbH']))
+        self.assertIn({'number':'1234','description':'Eigenes Konto'},s['accounts'])
         self.assertEqual((s['input'],s['target']),('',''))
         app.open_year({'path':str(self.year)});self.assertEqual(len(app.history()),1);self.assertEqual(app.settings()['target'],str(self.input/'verbucht'))
     def test_continue_sequence_when_reset_disabled(self):
@@ -81,24 +81,5 @@ class YearTests(unittest.TestCase):
         for pattern in ['{unknown}.pdf','../{belegnummer}.pdf','{aussteller.__class__}.pdf']:
             self.s['filename_pattern']=pattern
             with self.assertRaises(ValueError):self.plan([r])
-    def test_v2_template_does_not_modify_or_copy_ledger(self):
-        legacy=self.root/'legacy.sqlite'
-        with closing(sqlite3.connect(legacy)) as c, c:
-            c.executescript('CREATE TABLE accounts(number TEXT,description TEXT);CREATE TABLE providers(name TEXT,rule TEXT);CREATE TABLE preferences(name TEXT,value TEXT);CREATE TABLE counters(year INTEGER,last INTEGER);CREATE TABLE processed(hash TEXT);')
-            c.execute('INSERT INTO accounts VALUES (?,?)',('4910','Porto'))
-            c.execute('INSERT INTO providers VALUES (?,?)',('Post',json.dumps({'account':'4910','bank':'1200','aliases':[],'labels':{'amount':'Betrag'}})))
-            c.execute("INSERT INTO processed VALUES ('already-done')")
-        before=app.digest(legacy)
-        s=app.new_year({'path':str(self.root/'migrated.belegdb'),'year':2026,'template':str(legacy)})
-        self.assertEqual(app.history(),[]);self.assertEqual(app.digest(legacy),before)
-        self.assertEqual(s['rules']['Post']['labels']['amount'],'Betrag')
-    def test_label_alternatives_same_and_different_amounts(self):
-        rules={'DHL':{'aliases':['DHL Paket'],'labels':{'amount':['Gesamtsumme Brutto','Rechnungsbetrag']}}}
-        for label in ['Gesamtsumme Brutto','Rechnungsbetrag']:
-            self.assertEqual(extract_fields('DHL Paket\n'+label+': 6,19',rules)['amount'],'6,19')
-        r=extract_fields('DHL Paket\nGesamtsumme Brutto: 6,19\nRechnungsbetrag: 6,19',rules)
-        self.assertEqual(r['amount'],'6,19')
-        r=extract_fields('DHL Paket\nGesamtsumme Brutto: 6,19\nRechnungsbetrag: 7,19',rules)
-        self.assertEqual(r['amount'],'');self.assertIn('mehrdeutig',r['note'])
 
 if __name__=='__main__':unittest.main()

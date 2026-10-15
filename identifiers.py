@@ -6,7 +6,7 @@ from pypdf import PdfReader
 
 VAT_LABEL = r'(?:USt[.\s-]*(?:Id(?:entifikations)?[.\s-]*(?:Nr\.?)?|ID)|Umsatzsteuer[\s-]*(?:ID|Identifikationsnummer)|VAT\s*(?:ID|No\.?|Number|Registration)?)'
 TAX_LABEL = r'(?:Steuer[\s-]*(?:nummer|Nr\.?)|St[.\s-]*Nr\.?|Tax\s*(?:number|no\.?))'
-COMPANY = re.compile(r'\b(?:GmbH|AG|B\.V\.|Ltd\.?|Limited|Inc\.?|LLC|KG|UG|S\.A\.)\b',re.I)
+COMPANY = re.compile(r'\b(?:GmbH|AG|B\.V\.|Ltd\.?|Limited|Inc\.?|LLC|KG|UG|S\.A\.)(?!\w)',re.I)
 
 def compact(value):return re.sub(r'[^A-Z0-9]','',str(value).upper())
 def vat(value):
@@ -49,9 +49,11 @@ def find_identifiers(text,own_vat=(),own_tax=(),tax_country=''):
     for m in re.finditer(VAT_LABEL+r'\s*[:#.]?\s*',text,re.I):
         tail=text[m.end():].splitlines()[:2]
         for line in tail:
-            candidate=re.match(r'([A-Za-z]{2}[ \t.-]*[A-Za-z0-9][A-Za-z0-9 .-]{5,22})',line.strip())
+            # Stop at a complete token or digit-separated continuation; never eat
+            # a following word/label merely because it fits the generous VAT length.
+            candidate=re.match(r'([A-Za-z]{2}(?:[ \t]*[0-9][A-Za-z0-9]*|[A-Za-z0-9]*[0-9][A-Za-z0-9]*)(?:[ \t]+[A-Za-z]*[0-9][A-Za-z0-9]*)*)(?!\w)',line.strip())
             if not candidate:continue
-            try:value=vat(candidate.group(1).strip())
+            try:value=vat(candidate.group(1))
             except ValueError:continue
             add('vat',value,m.start(),m.end()+len(candidate.group()),value[:2]);break
     countries={r['country'] for r in records if not r['own'] and not r['recipient']}

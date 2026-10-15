@@ -13,6 +13,37 @@ Eingangsrechnungen lokal aus PDFs erfassen, prüfen, als WISO-TSV exportieren un
 
 Das Paket ist ein Python-Startpaket, keine eigenständige EXE. Nach der Einrichtung ist für die Belegverarbeitung kein Internet nötig. Es wird kein Cloud-KI-Dienst verwendet.
 
+## Version 3.3.0
+
+App vor dem Update schließen. Das Windows-Paket vollständig in einen eigenen Ordner entpacken und mit `Start.cmd` starten. Tests und Entwicklungsdateien sind im separaten Source-Paket enthalten. Eine Jahresdatei kann neu angelegt oder geöffnet werden; eine Datenbankmigration ist für diese Version nicht nötig.
+
+Unter **„PDF / Regel“** zeigt die App für Rechnungsnummer, Datum und Rechnungssumme die gefundenen Werte mit ihren Beschriftungen. Eine Fundstelle anklicken: **Blau** markiert die Beschriftung, **Gelb** den Wert. Die Vorschau wechselt zur passenden Seite. Mit **„Wert übernehmen“** lässt sich ein Vorschlag in die Prüfliste übernehmen; die Geprüft-Markierung wird dabei aufgehoben. Das Original-PDF bleibt separat zugänglich.
+
+Die Feldhinweise unterscheiden eindeutige Fundstellen, schwächere Vorschläge, Konflikte und fehlende Werte. Alle ausgewählten Belege müssen vor dem Export weiterhin geprüft werden. Ungewöhnliche Layouts, OCR-Fehler und unbeschriftete Werte können eine manuelle Korrektur erfordern. Es gibt keine fest programmierten Sonderfälle für einzelne Rechnungssteller.
+
+### Konten, Steuersätze und Prüfliste
+
+Neue Jahresdateien enthalten 341 EKR03-Konten als bearbeitbare Vorlage. Konten und Steuersätze werden in der Jahresdatei gespeichert; beim Folgejahr können sie aus der bisherigen Datei übernommen werden. Softwareupdates überschreiben sie nicht. Bereits vorhandene Jahresdateien erhalten die Kontenvorlage nicht nachträglich automatisch.
+
+Unter Stammdaten lassen sich Konten suchen, bearbeiten, deaktivieren und aus CSV/TSV importieren (zwei Spalten: Kontonummer, Bezeichnung; optionale Überschrift). Excel-Listen dafür als CSV speichern. Deaktivierte Konten erscheinen nicht mehr in der Vorschlagsliste; bestehende Belegzuordnungen bleiben erhalten.
+
+Steuersatzbezeichnungen sind frei bearbeitbar und erweiterbar. Vorbelegt sind „Keine Vorsteuer“ und „Umsatzsteuer § 13b UStG 19 % o. VSt EU-Untern.“. Der erste Eintrag ist die Vorauswahl. Eine Umbenennung aktualisiert zugeordnete Rechnungssteller und die aktuelle Prüfliste; bereits exportierte Belege bleiben unverändert.
+
+Sachkonto, Geldkonto und Steuersatz können beim Anlegen eines Rechnungsstellers gespeichert werden. In der Prüfliste gelten Änderungen nur für den jeweiligen Beleg. Erst „Als Standard für diesen Rechnungssteller speichern“ übernimmt sie dauerhaft.
+
+„Alle als geprüft markieren“ bestätigt die aktuelle Liste (bereits exportierte Duplikate bleiben ausgeschlossen). „Entfernen“ entfernt nur den Listeneintrag, nicht die Original-PDF. Ein erneuter Scan findet die Datei wieder. Datumseingabe: TT.MM.JJJJ. Fehlermeldungen stehen bei der ausgelösten Aktion; die Kopfzeile im PDF-/Regelfenster bleibt beim Scrollen sichtbar.
+
+Kennungen desselben vorgeschlagenen Rechnungsstellers werden gemeinsam aufgelistet und in einem Schritt bestätigt. Widersprüchliche Firmenzuordnungen bleiben getrennt.
+
+### PDF-Erkennung und Fundstellen
+
+- **Feldzuordnung merken:** Bei einer eindeutigen PDF-Fundstelle „Für zukünftige Belege merken“ wählen. Beschriftung, Rolle, Seite und Position werden beim ausgewählten Rechnungssteller gespeichert, nicht der konkrete Betrag oder die Rechnungsnummer. Passende spätere Vorschläge erhalten den Hinweis „Gemerkte Zuordnung“. Andere Fundstellen, Konflikte und OCR bleiben prüfpflichtig. Gemerkte Zuordnungen lassen sich je Feld löschen. Der gesamte Beleg muss weiterhin als geprüft bestätigt werden.
+- **Text auswählen:** In der Vorschau lassen sich Wörter markieren und kopieren. Die Textebene skaliert mit der Zoomstufe und liegt über den Fundstellenmarkierungen. Bei OCR wird die Herkunft angezeigt; der kopierte Text kann Erkennungsfehler enthalten.
+- **Rechnungssteller anlegen:** Das Menü einer Belegzeile füllt Name, Merkmale und zuordenbare Kennungen aus dem bereits eingelesenen Beleg vor. Alternativen und Fundstellen können geprüft werden. Erst „Speichern & auswählen“ legt den Rechnungssteller an und wertet den Beleg erneut aus.
+- **Sammelzuordnung:** Im Rechnungsstellerstandard „Sammelzuordnung über bestätigte Kennung“ aktivieren, um Belege mit unterschiedlichen Verkäufernamen über eine gemeinsame gespeicherte Kennung zusammenzufassen. Damit dürfen auch Plattformkennungen verwendet werden. Eigene und Empfängerkennungen bleiben ausgeschlossen. Treffen mehrere gespeicherte Rechnungssteller zu, bleibt die Auswahl offen. Die Option ist standardmäßig aus.
+
+Die zuletzt verwendete Jahresdatei wird im Hintergrund geöffnet. Dauert das zu lange, kann dieser Schritt in der Oberfläche übersprungen werden. Die Konsole zeigt Zeiten für Startvorbereitung und Dienststart. Nach einer erfolgreichen Einrichtung wird die vollständige Bibliotheksprüfung nur bei geänderter Umgebung oder nach einem fehlgeschlagenen App-Start wiederholt. Bei einer beschädigten Python-Umgebung kann die Datei `.venv/beleglotse-setup.json` gelöscht und `Start.cmd` erneut gestartet werden.
+
 ## Eine Datei pro Buchungsjahr
 
 Über **„Neues Jahr anlegen“** werden Buchungsjahr und Dateiname festgelegt, zum Beispiel `Belege-2026.belegdb`. Die Jahresdatei enthält:
@@ -32,6 +63,14 @@ Beim Anlegen von 2027 kannst du `Belege-2026.belegdb` als Vorlage auswählen. Ko
 Die Jahresdatei darf in einem lokal synchronisierten Cloud-Ordner liegen. Sie muss immer lokal verfügbar sein. Nur auf einem Rechner gleichzeitig verwenden. Vor einem Rechnerwechsel die App schließen und die vollständige Synchronisierung abwarten. Gleichzeitige Bearbeitung verschiedener Cloud-Kopien kann zu Konflikten führen; die App ist kein Mehrbenutzer-Server.
 
 Import- und Ablagepfade werden pro Jahresdatei und Rechner in `lokal.json` gespeichert. Diese lokale Konfiguration nicht zwischen Rechnern synchronisieren. Historische PDF-Verweise enthalten den ursprünglichen Dateipfad; bei anderen Laufwerksbuchstaben lassen sie sich gegebenenfalls nicht direkt öffnen.
+
+## Darstellung und Pflichtfelder
+
+Oben rechts schaltet das Sonnen-/Mondsymbol zwischen Hell und Dunkel um. Ohne gespeicherte Auswahl startet die App im Dark Mode. Die Auswahl wird auf diesem Rechner gespeichert und bleibt beim Neustart erhalten. Die PDF-Seiten behalten ihre Originaldarstellung.
+
+Fehlende Pflichtfelder ausgewählter Belege werden beim Erstellen der Exportvorschau rot markiert. Die Ansicht springt zum ersten fehlenden Feld; jede Markierung verschwindet, sobald das Feld ausgefüllt ist.
+
+Rechnungen mit 0,00 € werden regulär nummeriert, umbenannt, abgelegt und im Verlauf gespeichert, aber nicht in die TSV geschrieben. Die Vorschau zeigt „Nur Ablage – Betrag 0,00 €“. Enthält die Auswahl nur solche Belege, entsteht keine TSV-Datei. Negative Beträge werden weiterhin exportiert.
 
 ## Import und Ablage
 
@@ -77,9 +116,12 @@ Gesamtbetrag
 Betrag
 ```
 
-Diese Bezeichnungen sind Alternativen: Findet die App einen eindeutigen Wert, schlägt sie ihn vor. Mehrere Treffer mit identischem Wert sind unproblematisch. Bei unterschiedlichen Werten bleibt das Feld zur Klärung leer und die möglichen Werte werden genannt.
+Diese Bezeichnungen sind Alternativen: Findet die App einen eindeutigen Wert, schlägt sie ihn vor. Mehrere Treffer mit identischem Wert sind unproblematisch. Bei widersprüchlichen gleichwertigen Fundstellen bleibt das Feld zur Klärung leer. Schwächere Alternativen bleiben in der Fundstellenansicht sichtbar.
 
-Der Wert muss in derselben oder direkt nachfolgenden Zeile hinter der Bezeichnung stehen. Leer lassen bedeutet allgemeine Erkennung. Eigene Feldbezeichnungen ersetzen die allgemeine Erkennung für das betreffende Feld; sie werden nicht stillschweigend mit anderen Summenbegriffen vermischt.
+Die App berücksichtigt Positionen, Zeilen und Spalten. Werte können rechts neben oder direkt unter einer Beschriftung stehen; mehrzeilige und zweisprachige Tabellenköpfe werden berücksichtigt. Alle Seiten werden ausgewertet. Eigene Feldbezeichnungen **ergänzen** die Standardbegriffe. Doppelpunkte und übliche Trennzeichen sind optional. Eine bekannte Datumsbeschriftung wird nicht durch einen Eintrag im Nummernfeld zur Rechnungsnummer.
+
+Rechnungssumme, Netto-/Steuerbeträge und Zahlungsstand werden getrennt bewertet. Ein offener Restbetrag von 0,00 ersetzt die Rechnungssumme nicht. Eine rechnerische Prüfung unterstützt gedruckte Beträge; sie erzeugt keinen erfundenen Rechnungsbetrag. Allgemeine Bezeichnungen wie „Betrag“ sowie vorausbezahlte Summen mit passender Netto-/Steuerrechnung bleiben als prüfpflichtige Vorschläge markiert. Datumsangaben mit Monatsnamen werden unterstützt; bei zweistelligen Jahreszahlen in solchen Angaben wird 2000–2099 angenommen. Das Buchungsjahr ist vor dem Export zu prüfen.
+
 
 ## Rechnungssteller erkennen
 
@@ -87,25 +129,25 @@ Der Wert muss in derselben oder direkt nachfolgenden Zeile hinter der Bezeichnun
 
 1. Unter **Einstellungen** eigene USt-IDs und Steuernummern eintragen. Diese Kennungen werden bei der Rechnungsstellererkennung ausgeschlossen. Steuernummern brauchen ein Land, beispielsweise `DE:123/456/78901`.
 2. Eingangsordner auswählen und **„Rechnungssteller vorschlagen“** anklicken.
-3. Die App gruppiert Belege nach gefundenen Kennungen und schlägt Firmennamen vor. Soweit im PDF verfügbar, nutzt sie die räumliche Nähe zwischen Kennung und Firmenname. Beispielbelege und Textfundstellen lassen sich direkt öffnen; alternative Namen werden angezeigt.
+3. Bei einem ausdrücklich beschrifteten Verkäuferbereich schlägt die App dessen Namen als Textmerkmal vor. Andere Belege werden nach verwendbaren Kennungen gruppiert. Soweit im PDF verfügbar, nutzt sie die räumliche Nähe zwischen Kennung und Firmenname. Beispielbelege und Textfundstellen lassen sich direkt öffnen; alternative Namen werden angezeigt.
 4. Namen und Kennung anhand des Belegs prüfen. Einen neuen Namen eintragen oder einen vorhandenen Rechnungssteller auswählen. Sachkonto und Geldkonto können gleich ergänzt werden. Bei Steuernummern das Land prüfen beziehungsweise ergänzen.
 5. Jeden gewünschten Vorschlag ausdrücklich bestätigen und speichern. **Unbestätigte Vorschläge werden nicht als Stammdaten übernommen.** USt-ID und Steuernummer desselben Unternehmens können nacheinander demselben Rechnungssteller zugeordnet werden.
 6. **„Belege mit bestätigten Stammdaten neu einlesen“** anklicken und anschließend die Buchungsangaben prüfen.
 
-Kennungen und Namen sind Vorschläge, keine amtlich geprüften Unternehmensdaten. Auf einer Rechnung können auch Kennungen des Empfängers oder einer Abrechnungsstelle stehen. Eigene sowie ausdrücklich als Empfängerangabe erkannte Kennungen werden ausgeschlossen. Belege ohne verwendbare Kennung und Lesefehler erscheinen gesondert mit Hinweisen. Für Scans ohne Text wird Tesseract benötigt.
+Kennungen und Namen sind Vorschläge, keine amtlich geprüften Unternehmensdaten. Auf einer Rechnung können auch Kennungen des Empfängers oder einer Abrechnungsstelle stehen. Eigene sowie ausdrücklich als Empfängerangabe erkannte Kennungen werden ausgeschlossen. Ohne verwendbare Kennung können Firmennamen als prüfpflichtige Vorschläge erscheinen; Kennungen werden dabei nicht erfunden. Belege ohne Vorschläge sowie Lesefehler erscheinen gesondert mit Hinweisen. Für Scans ohne Text wird Tesseract benötigt.
 
-USt-IDs und Steuernummern werden getrennt gespeichert und beim Anlegen eines Folgejahres als Stammdaten übernommen. Eine Kennung kann nicht gleichzeitig zwei Rechnungsstellern zugewiesen werden. Deutsche USt-IDs werden auch ohne Feldbezeichnung gesucht; andere Länderformate benötigen eine passende USt-ID-/VAT-Bezeichnung. Die Erkennung deckt nicht jedes internationale Steuerformat ab. Bei Steuernummern ohne eindeutiges Land kann unter Einstellungen ein Standardland angegeben werden.
+USt-IDs und Steuernummern werden getrennt gespeichert und beim Anlegen eines Folgejahres als Stammdaten übernommen. Eine Kennung kann bei mehreren Rechnungsstellern hinterlegt werden. Für die automatische Zuordnung braucht eine geteilte Kennung ein passendes Namensmerkmal; ohne eindeutige Zuordnung bleibt der Rechnungssteller offen. Deutsche USt-IDs werden auch ohne Feldbezeichnung gesucht; andere Länderformate benötigen eine passende USt-ID-/VAT-Bezeichnung. Die Erkennung deckt nicht jedes internationale Steuerformat ab. Bei Steuernummern ohne eindeutiges Land kann unter Einstellungen ein Standardland angegeben werden.
 
 ### Reihenfolge der Zuordnung
 
-Zuerst werden gespeicherte USt-IDs und Steuernummern verglichen; Leerzeichen und übliche Trennzeichen werden vereinheitlicht. **Eindeutige Kennungstreffer haben Vorrang vor bloßen Textmerkmalen.** Passen Kennungen mehrerer Rechnungssteller, bleibt die Auswahl offen. Ohne Kennungstreffer greifen die gespeicherten Textregeln:
+Zuerst werden gespeicherte USt-IDs und Steuernummern verglichen; Leerzeichen und übliche Trennzeichen werden vereinheitlicht. **Verwendbare eindeutige Kennungstreffer haben Vorrang vor bloßen Textmerkmalen.** Ausdrücklich erkannte Verkäuferbereiche werden berücksichtigt; reine Plattform-, Empfänger- oder andere Rollenkennungen werden standardmäßig nicht zur Verkäuferzuordnung verwendet. Die ausdrückliche Sammelzuordnung erlaubt zusätzlich Plattformkennungen und unterschiedliche Verkäufernamen. Passen Kennungen mehrerer Rechnungssteller, bleibt die Auswahl offen. Ohne Kennungstreffer greifen die gespeicherten Textregeln:
 
 - **ODER:** Mindestens ein Erkennungsmerkmal muss vorkommen.
 - **UND:** Alle Erkennungsmerkmale müssen vorkommen.
 - **Ausschlussbegriffe:** Ein gefundener Ausschluss verhindert die automatische Zuordnung zu diesem Rechnungssteller, auch bei einer passenden Kennung.
 - Ohne Kennungen und Textmerkmale erfolgt keine automatische Zuordnung. Beim Anlegen wird der Name als editierbarer Textvorschlag vorbelegt. Ohne Merkmale erscheint „Keine automatische Erkennung eingerichtet.“
 
-Textmerkmale werden im gesamten PDF-Text gesucht. Ihre Position wird bei dieser Textsuche nicht gewichtet. Die räumliche Auswertung dient den Namensvorschlägen im Einrichtungsscan. Summenbezeichnungen entscheiden nicht über den Rechnungssteller.
+Textmerkmale werden im PDF-Text gesucht und mit ausdrücklich erkannten Beteiligtenrollen abgeglichen. Ein Name ausschließlich im Empfänger- oder Versanddienstleisterbereich soll keinen Rechnungssteller bestimmen. Rollen ohne erkennbare Beschriftung können unklar bleiben und müssen manuell geprüft werden. Summenbezeichnungen entscheiden nicht über den Rechnungssteller.
 
 Erst nach eindeutiger oder manueller Auswahl werden Feldregeln und Kontozuordnungen angewendet. Unter **„PDF / Regel“** zeigt die App passende Kennungen, Texttreffer und Ausschlüsse. Dort kannst du den Rechnungssteller direkt auswählen oder neu anlegen.
 
@@ -143,7 +185,7 @@ Die Nummer in der TSV ist unabhängig vom Dateinamen wählbar: eigene Belegnumme
 
 ## Gescannte und verschlüsselte PDFs
 
-Text-PDFs werden direkt gelesen. Für Seiten ohne ausreichenden Text lässt sich lokale OCR einschalten. Dafür muss **Tesseract** separat unter Windows installiert sein, mit deutschen oder englischen Sprachdaten. Die App sucht die Installation automatisch; alternativ unter Einstellungen `tesseract.exe` auswählen. Der PDF-Renderer wird beim App-Start eingerichtet.
+Text-PDFs werden direkt gelesen. Für Seiten ohne ausreichenden Text lässt sich lokale OCR einschalten. Dafür muss **Tesseract** separat unter Windows installiert sein, mit deutschen oder englischen Sprachdaten. Die App sucht die Installation automatisch; alternativ unter Einstellungen `tesseract.exe` auswählen. OCR bewahrt die Wortpositionen für die Fundstellenansicht. OCR-Werte bleiben als prüfpflichtig markiert. Während einer Sitzung werden die zuletzt gelesenen PDF-Daten im Arbeitsspeicher wiederverwendet; geänderte Dateiinhalte werden neu gelesen.
 
 OCR benötigt etwas Zeit und kann sich bei Zahlen oder Buchstaben irren. Ergebnisse immer prüfen. Fehlt Tesseract, ist weiterhin manuelle Erfassung möglich.
 
@@ -160,8 +202,8 @@ UTF-8 ohne BOM, Tabulatoren, Windows-Zeilenenden und keine Kopfzeile:
 | 3 | Gewählte eigene oder originale Rechnungsnummer |
 | 4 | Rechnungssteller |
 | 5 | Betrag, z. B. 6,19 € |
-| 6 | NULL |
-| 7 | Sachkontonummer |
+| 6 | Sachkontonummer |
+| 7 | Steuersatzbezeichnung |
 | 8 | Geldkontonummer |
 
 Nur EUR; keine automatische Währungsumrechnung. Negative Beträge und Nullbeträge bleiben erhalten. Die App entscheidet nicht über steuerliche Behandlung oder Zahlungszeitpunkt. Das Format entspricht der bereitgestellten WISO-Vorlage; den ersten tatsächlichen Import in WISO prüfen.
@@ -190,4 +232,6 @@ Der Quellcode enthält vorbereitete GitHub-Workflows für Windows-Tests und ZIP-
 
 BelegLotse steht unter der [GNU General Public License, Version 3](LICENSE) (SPDX: `GPL-3.0-only`). Copyright (c) 2026 Lorenz Uhlig. Nutzung, Änderung und Verkauf sind erlaubt. Bei Weitergabe gelten die GPL-Bedingungen, insbesondere zur Bereitstellung des entsprechenden Quellcodes und zur Lizenzierung abgeleiteter Werke. Das Programm wird ohne Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
 
-Drittrechnungssteller-Komponenten behalten ihre eigenen Lizenzen; siehe [THIRD_PARTY.md](THIRD_PARTY.md).
+Drittanbieter-Komponenten behalten ihre eigenen Lizenzen; siehe [THIRD_PARTY.md](THIRD_PARTY.md).
+
+Optionaler Oberflächentest: Node.js mit `jsdom` bereitstellen und `python tests/run_ui_masterdata.py` starten. Der Test verwendet ausschließlich temporäre Beispieldaten.

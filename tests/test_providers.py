@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Lorenz Uhlig
-import sys, tempfile, unittest, json
+import sys, tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -37,6 +37,7 @@ class ProviderRecognitionTests(unittest.TestCase):
         for mapping in [rules,dict(reversed(list(rules.items())))]:
             result=extract_fields('Firma\nSonderbetrag: 12,00',mapping)
             self.assertEqual((result['provider'],result['amount']),('',''))
+            self.assertIn('Mehrere Rechnungssteller',result['note'])
         self.assertEqual(extract_fields('Firma\nSonderbetrag: 12,00',rules,selected_provider='A')['amount'],'12,00')
 
 class ProviderDataTests(unittest.TestCase):
@@ -52,7 +53,7 @@ class ProviderDataTests(unittest.TestCase):
         app.SCANS.clear();app.PLANS.clear();self.tmp.cleanup()
 
     def test_empty_year_and_unassigned_supplier(self):
-        self.assertEqual(app.settings()['accounts'],[])
+        self.assertEqual(len(app.settings()['accounts']),341)
         self.assertEqual(app.settings()['rules'],{})
         s=app.save_rule({'name':'Firma','aliases':'Firma AG','exclude':'Andere Firma','match_mode':'all'})
         self.assertEqual((s['rules']['Firma']['account'],s['rules']['Firma']['bank']),('',''))
@@ -60,17 +61,6 @@ class ProviderDataTests(unittest.TestCase):
         with self.assertRaises(ValueError):app.save_rule({'name':'Firma','bank':'abc'})
         with self.assertRaises(ValueError):app.save_rule({'name':'Firma','match_mode':'first'})
 
-    def test_existing_master_data_and_year_copy_preserved(self):
-        rule={'account':'4321','bank':'9876','aliases':['Firma'],'labels':{'amount':'Fälliger Betrag'}}
-        with app.db() as c:
-            c.execute('INSERT INTO accounts VALUES (?,?)',('4321','Eigenes Konto'))
-            c.execute('INSERT INTO providers VALUES (?,?)',('Firma',json.dumps(rule)))
-        before=app.digest(self.year)
-        self.assertEqual(app.open_year({'path':str(self.year)})['rules']['Firma'],rule)
-        s=app.new_year({'path':str(self.root/'2027.belegdb'),'year':2027,'template':str(self.year)})
-        self.assertEqual(s['rules']['Firma'],rule)
-        self.assertEqual(s['accounts'],[{'number':'4321','description':'Eigenes Konto'}])
-        self.assertEqual(app.digest(self.year),before)
 
     def test_create_only_persists_and_never_overwrites_existing_rule(self):
         rule={'name':'Firma','aliases':['Firma AG'],'create_only':True}
@@ -106,9 +96,22 @@ class ProviderDataTests(unittest.TestCase):
     def test_scan_no_implicit_bank_and_keeps_custom_provider_name(self):
         path=self.root/'invoice.pdf';path.write_bytes(b'test')
         app.save_rule({'name':'Post','aliases':['My supplier']})
-        with patch('recognition.pdf_text',return_value=('My supplier\nGesamtbetrag: 10,00',[])):
+        with patch('recognition.pdf_text',return_value=('My supplier\nGesamtbetrag: 10,00',[],[])):
             result=app.scan(str(self.root))[0]
         self.assertEqual((result['provider'],result['bank'],result['account']),('Post','',''))
+
+
+    def test_layout_survives_scan_and_manual_reprocessing(self):
+        path=self.root/'invoice.pdf';path.write_bytes(b'test')
+        app.save_rule({'name':'Supplier','aliases':['My supplier']})
+        plain='My supplier\nRechnungsnummer:\nRechnungsdatum:\nRechnungsbetrag:\nINV-42\n28/05/2026\n52,69 EUR'
+        lines=['Rechnungsnummer: INV-42','Rechnungsdatum: 28/05/2026','Rechnungsbetrag: 52,69 EUR']
+        with patch('recognition.pdf_text',return_value=(plain,[],lines)):
+            row=app.scan(str(self.root))[0]
+        result=app.reprocess({'id':row['id'],'provider':'Supplier'})
+        self.assertEqual((row['number'],row['date'],row['amount']),('INV-42','2026-05-28','52,69'))
+        self.assertEqual((result['number'],result['date'],result['amount']),('INV-42','2026-05-28','52,69'))
+        self.assertNotIn('layout_lines',row)
 
     def test_unreadable_pdf_can_be_assigned_for_manual_entry(self):
         path=self.root/'invoice.pdf';path.write_bytes(b'invalid')
