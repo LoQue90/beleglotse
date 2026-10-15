@@ -33,7 +33,8 @@ def main():
                 for _ in range(120):
                     if proc.poll() is not None: raise RuntimeError('EXE beendet: '+(Path(tmp)/'startup.log').read_text())
                     try:
-                        url=(bundle/'instance.lock').read_bytes()[1:].decode('ascii').strip()
+                        with (bundle/'instance.lock').open('rb') as state:
+                            state.seek(1); url=state.read().decode('ascii').strip()
                         if url:
                             with urllib.request.urlopen(url, timeout=2) as response:
                                 assert b'BelegLotse' in response.read()
