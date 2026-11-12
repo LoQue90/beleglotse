@@ -26,7 +26,7 @@ class ManualTests(unittest.TestCase):
     def test_link_preserved_and_duplicate_rejected(self):
         path=self.root/'selbst_benannt.pdf';path.write_bytes(b'%PDF test')
         self.save(pdf=str(path));self.assertEqual(path.read_bytes(),b'%PDF test')
-        self.assertEqual(app.history()[0]['destination'],str(path))
+        self.assertEqual(app.history()[0]['destination'],str(path.resolve()))
         with self.assertRaisesRegex(ValueError,'bereits'):self.save(number='OTHER',pdf=str(path))
         with self.assertRaisesRegex(ValueError,'bereits'):self.save()
         self.assertEqual(app.settings()['counters']['2026'],1)

@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test history filters
+      - name: Test history filters and deletion
         run: |
           node tests/test_history_search.cjs
           node tests/test_history_delete.cjs
