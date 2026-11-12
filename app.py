@@ -24,7 +24,7 @@ DATA_ROOT=Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) e
 LOCAL=DATA_ROOT/'lokal.json'
 DATABASE=None
 TOKEN=secrets.token_urlsafe(32)
-SCANS={}; PLANS={}; DISCOVERIES={}
+SCANS={}; PLANS={}; DISCOVERIES={}; MANUALS={}
 DEFAULT={'tax_rates':['Keine Vorsteuer','Umsatzsteuer § 13b UStG 19 % o. VSt EU-Untern.'],'disabled_accounts':[],'own_vat':[],'own_tax':[],'tax_country':'','input':'','target':'','monthly':False,'number_source':'internal','ocr':True,'tesseract':'','prefix':'VTUER','year_digits':2,'sequence_digits':3,'annual_reset':True,'filename_pattern':'{belegnummer}_{aussteller}.pdf'}
 SHARED=('tax_rates','disabled_accounts','own_vat','own_tax','tax_country','monthly','number_source','ocr','prefix','year_digits','sequence_digits','annual_reset','filename_pattern')
 
@@ -498,7 +498,7 @@ def make_plan(payload):
             dest=folder/name
             if dest.exists() or str(dest).casefold() in destinations:raise ValueError('Zieldatei existiert bereits: '+str(dest))
             destinations.add(str(dest).casefold())
-            if amount!=0:lines.append(['Ausgabe',date.strftime('%d.%m.%Y'),tsv_number,r['provider'],f'{amount:.2f}'.replace('.',',')+' €',r['account'],r['tax_rate'],r['bank']])
+            if amount!=0:lines.append(['Ausgabe',date.strftime('%d.%m.%Y'),tsv_number,r['provider'],format_amount(amount)+' €',r['account'],r['tax_rate'],r['bank']])
             r.update(internal=internal,year=year,sequence=counters[year],currency='EUR',archive_only=amount==0)
             items.append(dict(source=str(source['path']),destination=str(dest),hash=h,key=key,metadata=r))
     stream=io.StringIO(newline='');csv.writer(stream,delimiter='\t',lineterminator='\r\n').writerows(lines)
@@ -546,6 +546,66 @@ def execute(plan_id):
     try:save_settings(plan['settings'])
     except Exception as e:warnings.append('Einstellungen nicht gespeichert: '+str(e))
     return dict(export=plan['export'],count=len(plan['items']),exported=sum(not i['metadata']['archive_only'] for i in plan['items']),archived_only=sum(i['metadata']['archive_only'] for i in plan['items']),warnings=warnings)
+
+def format_amount(amount):
+    return f'{amount:,.2f}'.translate(str.maketrans({',':'.','.':','}))
+
+def manual_preview():
+    s=settings();validate_naming(s)
+    with db() as c:
+        year=preference(c,'bookyear')
+        row=c.execute('SELECT last FROM counters WHERE year=?',(year,)).fetchone()
+        last=row[0] if row else 0
+    digits=int(s['year_digits'])
+    internal=cell(s['prefix'])+(str(year)[-digits:] if digits else '')+str(last+1).zfill(int(s['sequence_digits']))
+    token=secrets.token_hex(16)
+    MANUALS[token]=dict(data=str(DATABASE.resolve()),year=year,last=last,internal=internal)
+    return dict(id=token,internal=internal,year=year)
+
+def manual_save(p):
+    preview=MANUALS.get(p.get('id'))
+    if not preview or DATABASE is None or preview['data']!=str(DATABASE.resolve()):
+        raise ValueError('Vorschau abgelaufen. Dialog schließen und neu öffnen.')
+    if 'result' in preview:return preview['result']
+    r={k:cell(p.get(k,'')) for k in ('provider','date','number','amount')}
+    if any(not r[k] for k in ('provider','date','amount')):raise ValueError('Rechnungssteller, Datum und Betrag bitte ausfüllen.')
+    date=datetime.strptime(r['date'],'%Y-%m-%d')
+    if date.year!=preview['year'] and not p.get('year_confirmed'):
+        raise ValueError('Rechnungsdatum gehört nicht zum Buchungsjahr. Abweichendes Jahr bitte bestätigen.')
+    raw=r['amount'].replace('€','').replace(' ','')
+    if not re.fullmatch(r'-?(?:\d+|\d{1,3}(?:\.\d{3})+),\d{2}',raw):raise ValueError('Betrag als 1.234,56 oder 1234,56 eingeben.')
+    r['amount']=format_amount(Decimal(raw.replace('.','').replace(',','.')))
+    note=str(p.get('note','')).strip()
+    if len(note)>4000 or '\x00' in note:raise ValueError('Notiz ist zu lang oder enthält ungültige Zeichen.')
+    destination=cell(p.get('pdf',''));h='manual:'+p['id']
+    if destination:
+        path=Path(destination).expanduser().resolve()
+        if path.suffix.lower()!='.pdf' or not path.is_file():raise ValueError('Die verknüpfte PDF muss als lokale Datei vorhanden sein.')
+        h=digest(path);destination=str(path)
+    key=r['provider'].casefold()+'|'+r['number'].casefold() if r['number'] else None
+    r.update(internal=preview['internal'],year=preview['year'],sequence=preview['last']+1,currency='EUR',manual=True,note=note,account='',bank='',archive_only=False)
+    with db() as c:
+        c.execute('BEGIN IMMEDIATE')
+        row=c.execute('SELECT last FROM counters WHERE year=?',(preview['year'],)).fetchone()
+        if (row[0] if row else 0)!=preview['last']:raise ValueError('Nummernstand geändert. Dialog schließen und neu öffnen.')
+        if c.execute('SELECT 1 FROM processed WHERE hash=? OR invoice_key=?',(h,key)).fetchone():raise ValueError('Dieser Beleg ist bereits im Verlauf erfasst.')
+        c.execute('INSERT INTO processed VALUES (?,?,?,?,?,?,?)',(h,key,destination,'','',datetime.now().isoformat(),json.dumps(r,ensure_ascii=False)))
+        c.execute('INSERT OR REPLACE INTO counters VALUES (?,?)',(preview['year'],preview['last']+1))
+    preview['result']=dict(internal=r['internal'])
+    return preview['result']
+
+def delete_history(p):
+    if DATABASE is None or p.get('year_file')!=str(DATABASE.resolve()):
+        raise ValueError('Jahresdatei geändert. Verlauf bitte aktualisieren.')
+    if p.get('confirmed') is not True:raise ValueError('Löschen bitte bestätigen.')
+    with db() as c:
+        c.execute('BEGIN IMMEDIATE')
+        row=c.execute('SELECT metadata FROM processed WHERE hash=?',(p.get('id',''),)).fetchone()
+        if row is None:raise ValueError('Eintrag nicht mehr vorhanden. Verlauf bitte aktualisieren.')
+        internal=(json.loads(row[0]) if row[0] else {}).get('internal','')
+        c.execute('DELETE FROM processed WHERE hash=?',(p['id'],))
+    PLANS.clear();MANUALS.clear()
+    return dict(internal=internal)
 
 def history():
     with db() as c:
@@ -652,6 +712,9 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path=='/api/year/open':r=open_year(p)
             elif self.path=='/api/year/new':r=new_year(p)
             elif self.path=='/api/history':r=history()
+            elif self.path=='/api/history/delete':r=delete_history(p)
+            elif self.path=='/api/manual/preview':r=manual_preview()
+            elif self.path=='/api/manual/save':r=manual_save(p)
             elif self.path=='/api/text':r={'text':SCANS[p['id']]['text']}
             elif self.path=='/api/browse':
                 import tkinter as tk
@@ -660,6 +723,7 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     if p.get('save_year'):value=filedialog.asksaveasfilename(title='Neue Jahresdatei',defaultextension='.belegdb',initialfile='Belege-'+str(p.get('year',''))+'.belegdb',filetypes=[('Belegimport-Jahresdatei','*.belegdb')])
                     elif p.get('year_file'):value=filedialog.askopenfilename(title='Jahresdatei / Vorlage auswählen',filetypes=[('Belegimport-Dateien','*.belegdb *.sqlite'),('Alle','*')])
+                    elif p.get('pdf'):value=filedialog.askopenfilename(title='Bereits abgelegte PDF verknüpfen',filetypes=[('PDF','*.pdf')])
                     elif p.get('file'):value=filedialog.askopenfilename(title='Tesseract auswählen',filetypes=[('Programm','*.exe'),('Alle','*')])
                     else:value=filedialog.askdirectory(title='Ordner auswählen')
                     r={'path':value}

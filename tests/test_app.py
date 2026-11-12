@@ -42,7 +42,7 @@ class WorkflowTests(unittest.TestCase):
         self.row['account']='4910';self.row['provider']='bad\tfield'
         with self.assertRaises(ValueError):self.plan()
     def test_signed_amounts(self):
-        self.row['amount']='-1.234,56';self.assertIn('-1234,56 €',self.plan()['tsv'])
+        self.row['amount']='-1.234,56';self.assertIn('-1.234,56 €',self.plan()['tsv'])
         self.row['amount']='0,00';self.assertEqual(self.plan()['tsv'],'')
     def test_zero_only_archive_and_duplicate(self):
         self.row['amount']='-0,00';p=self.plan()

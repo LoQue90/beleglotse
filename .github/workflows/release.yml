@@ -19,6 +19,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test history filters
+        run: |
+          node tests/test_history_search.cjs
+          node tests/test_history_delete.cjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -53,7 +60,7 @@ jobs:
           }
           gh release view "$env:RELEASE_TAG" --repo "$env:GITHUB_REPOSITORY" 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create "$env:RELEASE_TAG" --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "BelegLotse $env:RELEASE_TAG" --generate-notes
+            gh release create "$env:RELEASE_TAG" --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "BelegLotse $env:RELEASE_TAG" --notes-file RELEASE_NOTES.md
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
           $releaseFiles = Get-ChildItem -Path dist -File | ForEach-Object { $_.FullName }

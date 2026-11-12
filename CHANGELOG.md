@@ -1,3 +1,12 @@
+# 3.3.3
+
+- Manuelle Belege im Verlauf mit optionalem PDF-Verweis und Notiz; gemeinsame fortlaufende Nummerierung und Dublettenprüfung.
+- Nummernvergabe erst beim Speichern; veraltete Vorschauen werden abgewiesen.
+- Einzelne Verlaufseinträge nach Bestätigung löschen; PDF, TSV und Nummernzähler bleiben erhalten.
+- TSV-Beträge mit Tausenderpunkt und Dezimalkomma, z. B. 1.646,23 €.
+- Verlaufssuche mit Originalnummer, Datum, Betrag und kombinierbaren Bereichsfiltern.
+- Künstliche Trennungen in Rechnungsnummern und Datum werden anhand des PDF-Textes korrigiert.
+
 # 3.3.1
 
 - Windows-EXE mit eingebettetem Python, Browserstart und Mehrfachstartschutz.

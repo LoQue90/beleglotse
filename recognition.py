@@ -9,7 +9,7 @@ RAW_CACHE=OrderedDict()
 CACHE_LIMIT=32
 from pypdf import PdfReader
 from pypdf.errors import DependencyError
-from document_model import read_geometry, text_document, make_rows
+from document_model import read_geometry, text_document, make_rows, reconcile_spacing
 from field_engine import recognize, apply_assignments
 from party_engine import analyze as analyze_parties
 
@@ -43,9 +43,9 @@ def pdf_text(path, ocr=True, tess='', with_layout=False, with_document=False):
             raise ValueError('Öffnungspasswort erforderlich. Bitte eine entsperrte Kopie verwenden.')
     except DependencyError as e:
         raise ValueError('cryptography fehlt. App über Start.cmd starten, um die Abhängigkeit einzurichten.') from e
-    texts=[];layout_lines=[];ocr_rows={}
+    texts=[];plain_pages=[];layout_lines=[];ocr_rows={}
     for page in reader.pages:
-        plain=page.extract_text() or ''
+        plain=page.extract_text() or '';plain_pages.append(plain)
         try:
             positioned=page.extract_text(extraction_mode='layout',layout_mode_space_vertically=False)
             layout_lines.extend(safe_layout_lines(plain,positioned))
@@ -96,6 +96,7 @@ def pdf_text(path, ocr=True, tess='', with_layout=False, with_document=False):
         try:geometry=read_geometry(path)
         except Exception:geometry=None
         if geometry:
+            geometry['rows']=[fixed for page_no,plain in enumerate(plain_pages,1) for fixed in reconcile_spacing([r for r in geometry['rows'] if r['page']==page_no],plain)]
             for page_no,rows in ocr_rows.items():
                 geometry['rows']=[r for r in geometry['rows'] if r['page']!=page_no]+rows
             geometry['rows'].sort(key=lambda r:(r['page'],r['box'][1]))

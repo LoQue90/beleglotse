@@ -4,7 +4,21 @@ Eingangsrechnungen lokal aus PDFs erfassen, prüfen, als WISO-TSV exportieren un
 
 **Rechnungen einlesen. Zuordnen. Ablegen.**
 
-## Start unter Windows
+## Neu in Version 3.3.3
+
+Windows-EXE und Python-Paket stehen im GitHub-Release bereit. Beim Update in einen neuen Ordner entpacken und die bestehende Jahresdatei öffnen.
+
+Unter **Verlauf → Beleg manuell erfassen** Rechnungssteller, Datum und Gesamtbetrag eintragen. Original-Rechnungsnummer, Notiz und PDF-Verknüpfung sind optional. Die angezeigte Nummer ist bis zum Speichern nur eine Vorschau. Abbrechen verbraucht keine Nummer. Die PDF vorher selbst benennen und ablegen; BelegLotse verändert sie nicht. Eine spätere Umbenennung macht den gespeicherten Verweis ungültig.
+
+Gespeicherte Einträge sind als **Manuell in WISO gebucht** mit Erfassungszeit und optionaler Notiz sichtbar und durchsuchbar. Sie erzeugen keine TSV. Der nächste normale Import setzt die Nummerierung fort. Ein abweichendes Rechnungsjahr muss ausdrücklich bestätigt werden. Eine PDF oder Kombination aus Rechnungssteller und Originalnummer darf nicht bereits im Verlauf erfasst sein.
+
+Im Verlauf kann jeder Eintrag über **Löschen** nach einer Bestätigung entfernt werden. PDF und TSV werden nicht gelöscht oder verändert; eine WISO-Buchung bleibt bestehen. Der Nummernzähler wird nicht zurückgesetzt, auch beim letzten Eintrag. Die gelöschte Nummer bleibt damit ungenutzt. Nach erneutem Einlesen kann derselbe Beleg wieder mit einer neuen Nummer erfasst werden.
+
+TSV-Beträge verwenden jetzt Tausenderpunkte, z. B. `1.646,23 €`. Die Änderungen aus 3.3.2 (Verlaufssuche und PDF-Abstandsfehler) sind enthalten.
+
+Prüfung: 108 Python-Tests und die Verlaufssuche bestanden. Der automatisierte Browsertest konnte in der Build-Umgebung wegen einer Chromium-Systembeschränkung nicht ausgeführt werden; Windows-Start und Dialogbedienung bitte lokal prüfen.
+
+## Start der veröffentlichten EXE unter Windows
 
 1. **Windows-EXE.zip** vollständig in einen beschreibbaren Ordner entpacken.
 2. `BelegLotse.exe` doppelklicken. Python und PDF-Bibliotheken sind enthalten.
@@ -13,6 +27,10 @@ Eingangsrechnungen lokal aus PDFs erfassen, prüfen, als WISO-TSV exportieren un
 Den gesamten Ordner einschließlich `_internal` zusammenlassen. Mehrfachstarts derselben Installation öffnen die laufende App. Die Jahresdatenbank bleibt separat. Beim Update einen neuen Ordner verwenden und die bestehende Jahresdatei in der App öffnen. Optional `lokal.json` aus dem alten Ordner übernehmen, um Startpräferenzen zu behalten.
 
 Das bisherige Windows-ZIP mit `Start.cmd` bleibt als Alternative verfügbar und benötigt Python 3.10+ sowie beim ersten Start Internet zur Einrichtung. OCR benötigt weiterhin eine separate Tesseract-Installation. Die lokale Belegverarbeitung verwendet keinen Cloud-KI-Dienst.
+
+## Version 3.3.2
+
+Die Verlaufssuche unterstützt Originalnummern, Datum und Betrag sowie kombinierbare Datums- und Betragsbereiche. Künstliche Trennungen in PDF-Rechnungsnummern und Datumsangaben werden mit dem vorhandenen Text abgeglichen. Bestehende Jahresdateien bleiben verwendbar.
 
 ## Version 3.3.1
 

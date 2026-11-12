@@ -31,6 +31,45 @@ def make_rows(words, page):
     return result
 
 
+def reconcile_spacing(rows, plain):
+    """Remove geometry-only gaps when the same source line confirms continuity.
+
+    Never infer across lines/columns or modify OCR words. Keep the union of
+    the original boxes so evidence highlighting still targets the full value.
+    """
+    references={}
+    for line in plain.splitlines():
+        tokens=line.split()
+        if not tokens:continue
+        key=''.join(tokens);boundaries=set();offset=0
+        for token in tokens[:-1]:
+            offset+=len(token);boundaries.add(offset)
+        references.setdefault(key,[]).append(boundaries)
+    result=[]
+    for row in rows:
+        words=row['words'];key=''.join(w['text'] for w in words)
+        options=references.get(key,[])
+        if not options or any(b!=options[0] for b in options):
+            result.append(row);continue
+        boundaries=options[0];merged=[];offset=0
+        for word in words:
+            current=dict(word)
+            if merged:
+                previous=merged[-1];a=previous['box'];b=current['box']
+                height=max(a[3]-a[1],b[3]-b[1],1)
+                if (offset not in boundaries and previous['origin']==current['origin']=='pdf'
+                        and -1<=b[0]-a[2]<=max(6,height*.8)):
+                    previous['text']+=current['text'];previous['box']=rectangle([previous,current])
+                else:merged.append(current)
+            else:merged.append(current)
+            offset+=len(word['text'])
+        position=0
+        for word in merged:
+            word['start']=position;word['end']=position+len(word['text']);position=word['end']+1
+        result.append(dict(row,words=merged,text=' '.join(w['text'] for w in merged)))
+    return result
+
+
 def read_geometry(path):
     import pypdfium2 as pdfium
     result=dict(version=VERSION,pages=[],rows=[],positioned=True)
